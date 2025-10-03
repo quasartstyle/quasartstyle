@@ -219,13 +219,36 @@ const LotesManager = ({ data, setData }) => {
 
 const InventarioManager = ({ data, setData }) => {
   const [showModal, setShowModal] = useState(false);
+  const [editingPrenda, setEditingPrenda] = useState(null);
   const [filtro, setFiltro] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
   const [formData, setFormData] = useState({
-    loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaConfirmada: ''
+    loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: ''
   });
 
   const tipos = ['Camiseta', 'Camisa', 'Pantalon', 'Vestido', 'Chaqueta', 'Sudadera', 'Jersey', 'Zapatos', 'Otro'];
+
+  const resetForm = () => {
+    setFormData({
+      loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: ''
+    });
+    setEditingPrenda(null);
+  };
+
+  const handleEdit = (prenda) => {
+    setEditingPrenda(prenda);
+    setFormData({
+      loteId: prenda.loteId,
+      tipo: prenda.tipo,
+      talla: prenda.talla,
+      precioObjetivo: prenda.precioObjetivo.toString(),
+      precioVentaReal: prenda.precioVentaReal.toString(),
+      fechaSubida: prenda.fechaSubida || '',
+      fechaVentaPendiente: prenda.fechaVentaPendiente || '',
+      fechaVentaConfirmada: prenda.fechaVentaConfirmada || ''
+    });
+    setShowModal(true);
+  };
 
   const handleSubmit = () => {
     if (!formData.loteId || !formData.tipo || !formData.talla) {
@@ -238,26 +261,33 @@ const InventarioManager = ({ data, setData }) => {
 
     let estado = 'comprada';
     if (formData.fechaVentaConfirmada) estado = 'vendida-confirmada';
+    else if (formData.fechaVentaPendiente) estado = 'vendida-pendiente';
     else if (formData.fechaSubida) estado = 'subida';
 
-    const nueva = {
-      id: Date.now().toString(),
+    const prendaData = {
+      id: editingPrenda?.id || Date.now().toString(),
       loteId: formData.loteId,
       loteCodigo: lote.codigo,
-      sku: `QS-${Date.now().toString().slice(-8)}`,
+      sku: editingPrenda?.sku || `QS-${Date.now().toString().slice(-8)}`,
       tipo: formData.tipo,
       talla: formData.talla,
       precioCompra: lote.costeUnitario,
       precioObjetivo: parseFloat(formData.precioObjetivo) || 0,
       precioVentaReal: parseFloat(formData.precioVentaReal) || 0,
       fechaSubida: formData.fechaSubida || null,
+      fechaVentaPendiente: formData.fechaVentaPendiente || null,
       fechaVentaConfirmada: formData.fechaVentaConfirmada || null,
       estado
     };
 
-    setData({ ...data, prendas: [...data.prendas, nueva] });
+    if (editingPrenda) {
+      setData({ ...data, prendas: data.prendas.map(p => p.id === editingPrenda.id ? prendaData : p) });
+    } else {
+      setData({ ...data, prendas: [...data.prendas, prendaData] });
+    }
+
     setShowModal(false);
-    setFormData({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaConfirmada: '' });
+    resetForm();
   };
 
   const prendas = data.prendas.filter(p => {
@@ -286,6 +316,7 @@ const InventarioManager = ({ data, setData }) => {
             <option value="todos">Todos</option>
             <option value="comprada">Compradas</option>
             <option value="subida">En Vinted</option>
+            <option value="vendida-pendiente">Pendientes</option>
             <option value="vendida-confirmada">Vendidas</option>
           </select>
         </div>
@@ -304,7 +335,12 @@ const InventarioManager = ({ data, setData }) => {
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-3">
                     <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">{p.sku}</span>
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">{p.estado}</span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      p.estado === 'comprada' ? 'bg-gray-100 text-gray-800' :
+                      p.estado === 'subida' ? 'bg-blue-100 text-blue-800' :
+                      p.estado === 'vendida-pendiente' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>{p.estado}</span>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                     <div><p className="text-gray-600">Lote</p><p className="font-semibold">{p.loteCodigo}</p></div>
@@ -314,9 +350,14 @@ const InventarioManager = ({ data, setData }) => {
                     <div><p className="text-gray-600">Venta</p><p className="font-semibold text-green-600">{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div>
                   </div>
                 </div>
-                <button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                  <Trash2 size={18} />
-                </button>
+                <div className="flex space-x-2">
+                  <button onClick={() => handleEdit(p)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                    <Edit2 size={18} />
+                  </button>
+                  <button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -327,14 +368,14 @@ const InventarioManager = ({ data, setData }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-screen overflow-y-auto">
             <div className="flex justify-between mb-6">
-              <h3 className="text-xl font-bold">Nueva Prenda</h3>
-              <button onClick={() => setShowModal(false)} className="text-gray-500"><X size={24} /></button>
+              <h3 className="text-xl font-bold">{editingPrenda ? 'Editar Prenda' : 'Nueva Prenda'}</h3>
+              <button onClick={() => { setShowModal(false); resetForm(); }} className="text-gray-500"><X size={24} /></button>
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Lote</label>
-                  <select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
+                  <select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value })} className="w-full px-3 py-2 border rounded-lg" disabled={editingPrenda}>
                     <option value="">Selecciona</option>
                     {data.lotes.map(l => <option key={l.id} value={l.id}>{l.codigo}</option>)}
                   </select>
@@ -353,28 +394,43 @@ const InventarioManager = ({ data, setData }) => {
                   <input type="text" value={formData.talla} onChange={(e) => setFormData({ ...formData, talla: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="M, L, 42..." />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Precio Objetivo</label>
+                  <label className="block text-sm font-medium mb-1">Precio Objetivo (€)</label>
                   <input type="number" step="0.01" value={formData.precioObjetivo} onChange={(e) => setFormData({ ...formData, precioObjetivo: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="20.00" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Fecha Subida</label>
-                  <input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
+              
+              <div className="border-t pt-4">
+                <h4 className="font-semibold mb-3 text-gray-700">Estado de la prenda</h4>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Fecha Subida a Vinted</label>
+                    <input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
+                    <p className="text-xs text-gray-500 mt-1">Marca cuando subes la prenda a Vinted</p>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Fecha Venta Pendiente</label>
+                    <input type="date" value={formData.fechaVentaPendiente} onChange={(e) => setFormData({ ...formData, fechaVentaPendiente: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
+                    <p className="text-xs text-gray-500 mt-1">Cuando alguien compra pero aún no confirma</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Precio Venta Real (€)</label>
+                      <input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="18.50" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Fecha Venta Confirmada</label>
+                      <input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">Cuando el cliente confirma y recibes el dinero</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Precio Venta Real</label>
-                  <input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} className="w-full px-3 py-2 border rounded-lg" placeholder="18.50" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Fecha Venta Confirmada</label>
-                <input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} className="w-full px-3 py-2 border rounded-lg" />
               </div>
             </div>
             <div className="flex space-x-3 mt-6">
-              <button onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 border rounded-lg">Cancelar</button>
-              <button onClick={handleSubmit} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg">Crear</button>
+              <button onClick={() => { setShowModal(false); resetForm(); }} className="flex-1 px-4 py-2 border rounded-lg">Cancelar</button>
+              <button onClick={handleSubmit} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg">{editingPrenda ? 'Guardar Cambios' : 'Crear Prenda'}</button>
             </div>
           </div>
         </div>
