@@ -1014,6 +1014,7 @@ function App() {
           </div>
         )}
 
+        {currentView === 'estadisticas' && <EstadisticasView data={data} selectedMonth={selectedMonth} />}
         {currentView === 'lotes' && <LotesManager data={data} setData={setData} />}
         {currentView === 'inventario' && <InventarioManager data={data} setData={setData} />}
         {currentView === 'config' && <ConfigManager data={data} setData={setData} />}
