@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDghfp6jJPvRZyJACb5DeRJTF_EvsRnorY",
@@ -11,8 +11,8 @@ const firebaseConfig = {
   appId: "1:188988784305:web:d45d34f114882a2c58ac90"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+initializeApp(firebaseConfig);
+getFirestore();
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
