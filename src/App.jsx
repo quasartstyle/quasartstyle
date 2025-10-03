@@ -552,9 +552,8 @@ function App() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2">
-              quasart<span className="italic">STYLE</span>
-            </h1>
+            <img src="/logo.png" alt="Quasart Style" className="w-24 h-24 mx-auto mb-4 object-contain" />
+            <h1 className="text-3xl font-bold mb-2 text-gray-800">Quasart Style</h1>
             <p className="text-gray-600">Panel de Control Vinted</p>
           </div>
           
