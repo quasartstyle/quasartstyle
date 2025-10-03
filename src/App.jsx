@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Package, TrendingUp, Settings, LogOut, Download, Calendar, Plus, Edit2, Trash2, X, Search, AlertCircle } from 'lucide-react';
+import { BarChart3, Package, TrendingUp, Settings, LogOut, Download, Calendar, Plus, Edit2, Trash2, X, Search, AlertCircle, PieChart } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
@@ -439,7 +439,248 @@ const InventarioManager = ({ data, setData }) => {
   );
 };
 
-const ConfigManager = ({ data, setData }) => {
+const EstadisticasView = ({ data, selectedMonth }) => {
+  const calculateStats = (month) => {
+    const prendasMes = data.prendas.filter(p => {
+      const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
+      return fechaVenta && fechaVenta.startsWith(month);
+    });
+
+    const lotesDelMes = data.lotes.filter(l => l.fecha.startsWith(month));
+    
+    const prendasCompradasMes = lotesDelMes.reduce((sum, l) => sum + l.cantidad, 0);
+    const prendasVendidasMes = prendasMes.length;
+    
+    const prendasPeriodoAnterior = data.prendas.filter(p => {
+      const fecha = p.fechaVentaConfirmada || p.fechaVentaPendiente;
+      if (!fecha) return false;
+      const fechaObj = new Date(fecha);
+      const mesObj = new Date(month);
+      return fechaObj < mesObj;
+    }).length;
+
+    const totalPrendasDisponibles = prendasCompradasMes + prendasPeriodoAnterior;
+    const ratioRotacion = totalPrendasDisponibles > 0 ? prendasVendidasMes / totalPrendasDisponibles : 0;
+
+    const tiemposEnVinted = prendasMes.map(p => {
+      if (!p.fechaSubida || !p.fechaVentaConfirmada) return 0;
+      const dias = Math.floor((new Date(p.fechaVentaConfirmada) - new Date(p.fechaSubida)) / (1000 * 60 * 60 * 24));
+      return dias;
+    }).filter(d => d > 0);
+    const tiempoPromedioVinted = tiemposEnVinted.length > 0 ? tiemposEnVinted.reduce((a, b) => a + b, 0) / tiemposEnVinted.length : 0;
+
+    const prendasDefectuosasMes = lotesDelMes.reduce((sum, l) => sum + l.prendasDefectuosas, 0);
+    const promedioPrendasDefectuosas = prendasCompradasMes > 0 ? (prendasDefectuosasMes / prendasCompradasMes) * 100 : 0;
+
+    const prendasATratarMes = data.prendas.filter(p => {
+      const lote = data.lotes.find(l => l.id === p.loteId);
+      return lote && lote.fecha.startsWith(month) && p.estadoInicial === 'a-tratar';
+    }).length;
+    const promedioPrendasATratar = prendasCompradasMes > 0 ? (prendasATratarMes / prendasCompradasMes) * 100 : 0;
+
+    const prendasInutiles = data.prendas.filter(p => {
+      const lote = data.lotes.find(l => l.id === p.loteId);
+      return lote && lote.fecha.startsWith(month) && p.estado === 'desechada';
+    }).length;
+    const promedioPrendasInutiles = prendasCompradasMes > 0 ? (prendasInutiles / prendasCompradasMes) * 100 : 0;
+
+    const prendasAlPrecioObjetivo = prendasMes.filter(p => p.precioVentaReal >= p.precioObjetivo && p.precioObjetivo > 0).length;
+    const promedioVentasAlPrecioObjetivo = prendasVendidasMes > 0 ? (prendasAlPrecioObjetivo / prendasVendidasMes) * 100 : 0;
+
+    const precios = prendasMes.map(p => p.precioVentaReal).filter(p => p > 0);
+    const precioMaximo = precios.length > 0 ? Math.max(...precios) : 0;
+    const precioMinimo = precios.length > 0 ? Math.min(...precios) : 0;
+    const ticketMedio = precios.length > 0 ? precios.reduce((a, b) => a + b, 0) / precios.length : 0;
+
+    const costePromedio = prendasMes.length > 0 ? prendasMes.reduce((sum, p) => sum + p.precioCompra, 0) / prendasMes.length : 0;
+    
+    const totalVentas = prendasMes.reduce((sum, p) => sum + p.precioVentaReal, 0);
+    const totalCosteCompra = prendasMes.reduce((sum, p) => sum + p.precioCompra, 0);
+    const margenBruto = totalVentas > 0 ? ((totalVentas - totalCosteCompra) / totalVentas) * 100 : 0;
+
+    const costeEnvioUnitario = data.config.costeEnvio;
+    const costeLavadoUnitario = data.config.costeLavado;
+
+    const totalDevoluciones = data.prendas.filter(p => p.devuelta && p.fechaVentaConfirmada && p.fechaVentaConfirmada.startsWith(month)).length;
+    const tasaDevoluciones = prendasVendidasMes > 0 ? (totalDevoluciones / prendasVendidasMes) * 100 : 0;
+
+    return {
+      prendasCompradasMes,
+      prendasPeriodoAnterior,
+      prendasVendidasMes,
+      ratioRotacion,
+      tiempoPromedioVinted,
+      promedioPrendasDefectuosas,
+      promedioPrendasATratar,
+      promedioPrendasInutiles,
+      promedioVentasAlPrecioObjetivo,
+      precioMaximo,
+      precioMinimo,
+      ticketMedio,
+      costePromedio,
+      margenBruto,
+      costeEnvioUnitario,
+      costeLavadoUnitario,
+      tasaDevoluciones
+    };
+  };
+
+  const stats = calculateStats(selectedMonth);
+
+  const StatCard = ({ title, value, subtitle, color = 'blue' }) => (
+    <div className="bg-white rounded-lg shadow-sm p-6 border-l-4" style={{ borderColor: color }}>
+      <h3 className="text-sm font-medium text-gray-600 mb-2">{title}</h3>
+      <p className="text-3xl font-bold text-gray-900">{value}</p>
+      {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Estadísticas Detalladas</h2>
+        <div className="text-sm text-gray-600">
+          Mes: {new Date(selectedMonth + '-01').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+        </div>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h3 className="font-semibold text-blue-900 mb-2">📊 Resumen Ejecutivo</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <p className="text-blue-700">Prendas compradas</p>
+            <p className="font-bold text-blue-900 text-lg">{stats.prendasCompradasMes}</p>
+          </div>
+          <div>
+            <p className="text-blue-700">Prendas vendidas</p>
+            <p className="font-bold text-blue-900 text-lg">{stats.prendasVendidasMes}</p>
+          </div>
+          <div>
+            <p className="text-blue-700">Margen bruto</p>
+            <p className="font-bold text-blue-900 text-lg">{stats.margenBruto.toFixed(1)}%</p>
+          </div>
+          <div>
+            <p className="text-blue-700">Ticket medio</p>
+            <p className="font-bold text-blue-900 text-lg">{stats.ticketMedio.toFixed(2)} €</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-bold mb-4 text-gray-800">Existencias</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard title="Prendas compradas" value={stats.prendasCompradasMes} color="#3B82F6" />
+          <StatCard title="Prendas del periodo anterior" value={`≈ ${stats.prendasPeriodoAnterior}`} color="#6366F1" />
+          <StatCard title="Prendas vendidas" value={stats.prendasVendidasMes} color="#10B981" />
+          <StatCard title="Ratio de rotación de mercancía" value={stats.ratioRotacion.toFixed(2)} subtitle="Menor a 1 es normal por la cola de liquidación" color="#8B5CF6" />
+          <StatCard title="Tiempo promedio en Vinted" value={`${Math.round(stats.tiempoPromedioVinted)} días`} color="#F59E0B" />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-bold mb-4 text-gray-800">Calidad</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard 
+            title="Prendas defectuosas" 
+            value={`${stats.promedioPrendasDefectuosas.toFixed(1)}%`} 
+            color={stats.promedioPrendasDefectuosas > 30 ? "#EF4444" : "#F59E0B"} 
+          />
+          <StatCard 
+            title="Prendas a tratar" 
+            value={`${stats.promedioPrendasATratar.toFixed(1)}%`} 
+            color="#F59E0B" 
+          />
+          <StatCard 
+            title="Prendas inútiles (desechables)" 
+            value={`${stats.promedioPrendasInutiles.toFixed(1)}%`} 
+            color="#EF4444" 
+          />
+          <StatCard 
+            title="Ventas al precio objetivo" 
+            value={`${stats.promedioVentasAlPrecioObjetivo.toFixed(1)}%`} 
+            color={stats.promedioVentasAlPrecioObjetivo > 60 ? "#10B981" : "#F59E0B"} 
+          />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-bold mb-4 text-gray-800">Ventas</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Precio máximo" value={`${stats.precioMaximo.toFixed(2)} €`} color="#10B981" />
+          <StatCard title="Precio mínimo" value={`${stats.precioMinimo.toFixed(2)} €`} color="#6366F1" />
+          <StatCard title="Ticket medio" value={`${stats.ticketMedio.toFixed(2)} €`} color="#8B5CF6" />
+          <StatCard title="Coste promedio de compra" value={`${stats.costePromedio.toFixed(2)} €`} color="#F59E0B" />
+          <StatCard title="Margen bruto promedio" value={`${stats.margenBruto.toFixed(2)}%`} color="#10B981" />
+          <StatCard title="Coste promedio de envío unitario" value={`${stats.costeEnvioUnitario.toFixed(2)} €`} color="#6B7280" />
+          <StatCard title="Coste promedio de lavado unitario" value={`${stats.costeLavadoUnitario.toFixed(2)} €`} color="#6B7280" />
+          <StatCard title="Tasa de devoluciones" value={`${stats.tasaDevoluciones.toFixed(2)}%`} color={stats.tasaDevoluciones > 3 ? "#EF4444" : "#10B981"} />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h3 className="text-lg font-bold mb-4 text-gray-800">Estadísticas por tipo de prenda</h3>
+        <TipoPrendaStats prendas={data.prendas.filter(p => {
+          const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
+          return fechaVenta && fechaVenta.startsWith(selectedMonth);
+        })} />
+      </div>
+    </div>
+  );
+};
+
+const TipoPrendaStats = ({ prendas }) => {
+  const tipoStats = {};
+  
+  prendas.forEach(p => {
+    if (!tipoStats[p.tipo]) {
+      tipoStats[p.tipo] = { cantidad: 0, totalVentas: 0, totalCompras: 0 };
+    }
+    tipoStats[p.tipo].cantidad++;
+    tipoStats[p.tipo].totalVentas += p.precioVentaReal;
+    tipoStats[p.tipo].totalCompras += p.precioCompra;
+  });
+
+  const tiposOrdenados = Object.entries(tipoStats).sort((a, b) => b[1].cantidad - a[1].cantidad);
+
+  if (tiposOrdenados.length === 0) {
+    return <p className="text-gray-500 text-center py-4">No hay ventas en este periodo</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tipo</th>
+            <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Cantidad</th>
+            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Total Ventas</th>
+            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Precio Medio</th>
+            <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700">Margen</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-200">
+          {tiposOrdenados.map(([tipo, stats]) => {
+            const precioMedio = stats.totalVentas / stats.cantidad;
+            const margen = ((stats.totalVentas - stats.totalCompras) / stats.totalVentas) * 100;
+            return (
+              <tr key={tipo} className="hover:bg-gray-50">
+                <td className="px-4 py-3 text-sm font-medium text-gray-900">{tipo}</td>
+                <td className="px-4 py-3 text-sm text-center text-gray-700">{stats.cantidad}</td>
+                <td className="px-4 py-3 text-sm text-right text-gray-700">{stats.totalVentas.toFixed(2)} €</td>
+                <td className="px-4 py-3 text-sm text-right text-gray-700">{precioMedio.toFixed(2)} €</td>
+                <td className="px-4 py-3 text-sm text-right">
+                  <span className={`font-semibold ${margen > 70 ? 'text-green-600' : margen > 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {margen.toFixed(1)}%
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
   const [tab, setTab] = useState('costes');
 
   return (
@@ -594,9 +835,10 @@ function App() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">
-              quasart<span className="italic">STYLE</span>
-            </h1>
+            <div className="flex items-center space-x-3">
+              <img src="/logo.png" alt="Quasart Style" className="w-10 h-10 object-contain" />
+              <h1 className="text-2xl font-bold text-gray-800">Quasart Style</h1>
+            </div>
             <button
               onClick={() => setIsAuthenticated(false)}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
@@ -619,6 +861,15 @@ function App() {
             >
               <BarChart3 size={20} />
               <span className="font-medium">Dashboard</span>
+            </button>
+            <button
+              onClick={() => setCurrentView('estadisticas')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+                currentView === 'estadisticas' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <PieChart size={20} />
+              <span className="font-medium">Estadísticas</span>
             </button>
             <button
               onClick={() => setCurrentView('lotes')}
