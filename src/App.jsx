@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Package, TrendingUp, Settings, LogOut, Download, Calendar, Plus, Edit2, Trash2, X, Search, AlertCircle, PieChart } from 'lucide-react';
+import { BarChart3, Package, TrendingUp, Settings, LogOut, Download, Calendar, AlertCircle, PieChart } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
