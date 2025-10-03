@@ -1,4 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDghfp6jJPvRZyJACb5DeRJTF_EvsRnorY",
+  authDomain: "quasartstyle-vinted.firebaseapp.com",
+  projectId: "quasartstyle-vinted",
+  storageBucket: "quasartstyle-vinted.firebasestorage.app",
+  messagingSenderId: "188988784305",
+  appId: "1:188988784305:web:d45d34f114882a2c58ac90"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
