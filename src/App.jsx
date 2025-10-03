@@ -1,5 +1,60 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, Package, TrendingUp, Settings, LogOut, Download, Calendar, Plus, Edit2, Trash2, X, Search, AlertCircle } from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDghfp6jJPvRZyJACb5DeRJTF_EvsRnorY",
+  authDomain: "quasartstyle-vinted.firebaseapp.com",
+  projectId: "quasartstyle-vinted",
+  storageBucket: "quasartstyle-vinted.firebasestorage.app",
+  messagingSenderId: "188988784305",
+  appId: "1:188988784305:web:d45d34f114882a2c58ac90"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const useFirebaseData = () => {
+  const [data, setData] = useState({
+    lotes: [],
+    prendas: [],
+    gastos: [],
+    ingresos: [],
+    config: {
+      costeEnvio: 0.18,
+      costeLavado: 0.15,
+      alertaDias: 30,
+      alertaStock: 50,
+      alertaMargen: 60,
+      alertaDefectuosas: 40
+    }
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const docRef = doc(db, 'quasart', 'data');
+    
+    const unsubscribe = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setData(docSnap.data());
+      } else {
+        setDoc(docRef, data);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const saveData = async (newData) => {
+    setData(newData);
+    const docRef = doc(db, 'quasart', 'data');
+    await setDoc(docRef, newData);
+  };
+
+  return [data, saveData, loading];
+};
 
 const LotesManager = ({ data, setData }) => {
   const [showModal, setShowModal] = useState(false);
@@ -359,38 +414,7 @@ const ConfigManager = ({ data, setData }) => {
   );
 };
 
-const useLocalStorage = () => {
-  const [data, setData] = useState({
-    lotes: [],
-    prendas: [],
-    gastos: [],
-    ingresos: [],
-    config: {
-      costeEnvio: 0.18,
-      costeLavado: 0.15,
-      alertaDias: 30,
-      alertaStock: 50,
-      alertaMargen: 60,
-      alertaDefectuosas: 40
-    }
-  });
-
-  useEffect(() => {
-    const saved = localStorage.getItem('quasart-data');
-    if (saved) {
-      setData(JSON.parse(saved));
-    }
-  }, []);
-
-  const saveData = (newData) => {
-    setData(newData);
-    localStorage.setItem('quasart-data', JSON.stringify(newData));
-  };
-
-  return [data, saveData];
-};
-
-const QuasartVintedApp = () => {
+function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [currentView, setCurrentView] = useState('dashboard');
@@ -412,8 +436,8 @@ const QuasartVintedApp = () => {
       return fechaVenta && fechaVenta.startsWith(month);
     });
 
-    const gastosMes = data.gastos.filter(g => g.fecha.startsWith(month));
-    const ingresosMes = data.ingresos.filter(i => i.fecha.startsWith(month));
+    const gastosMes = data.gastos.filter(g => g.fecha && g.fecha.startsWith(month));
+    const ingresosMes = data.ingresos.filter(i => i.fecha && i.fecha.startsWith(month));
 
     const totalVentas = prendasMes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
     const totalGastos = gastosMes.reduce((sum, g) => sum + g.cantidad, 0);
@@ -670,13 +694,11 @@ const QuasartVintedApp = () => {
         )}
 
         {currentView === 'lotes' && <LotesManager data={data} setData={setData} />}
-
         {currentView === 'inventario' && <InventarioManager data={data} setData={setData} />}
-
         {currentView === 'config' && <ConfigManager data={data} setData={setData} />}
       </main>
     </div>
   );
-};
+}
 
-export default QuasartVintedApp;
+export default App;
