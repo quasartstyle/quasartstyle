@@ -1,79 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDghfp6jJPvRZyJACb5DeRJTF_EvsRnorY",
-  authDomain: "quasartstyle-vinted.firebaseapp.com",
-  projectId: "quasartstyle-vinted",
-  storageBucket: "quasartstyle-vinted.firebasestorage.app",
-  messagingSenderId: "188988784305",
-  appId: "1:188988784305:web:d45d34f114882a2c58ac90"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const useFirebaseData = () => {
-  const [data, setData] = useState({
-    lotes: [],
-    prendas: [],
-    gastos: [],
-    ingresos: [],
-    config: {
-      costeEnvio: 0.18,
-      costeLavado: 0.15,
-      alertaDias: 30,
-      alertaStock: 50,
-      alertaMargen: 60,
-      alertaDefectuosas: 40
-    }
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const defaultData = {
-      lotes: [],
-      prendas: [],
-      gastos: [],
-      ingresos: [],
-      config: {
-        costeEnvio: 0.18,
-        costeLavado: 0.15,
-        alertaDias: 30,
-        alertaStock: 50,
-        alertaMargen: 60,
-        alertaDefectuosas: 40
-      }
-    };
-
-    const docRef = doc(db, 'quasart', 'data');
-    
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setData(docSnap.data());
-      } else {
-        setDoc(docRef, defaultData);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const saveData = async (newData) => {
-    setData(newData);
-    const docRef = doc(db, 'quasart', 'data');
-    await setDoc(docRef, newData);
-  };
-
-  return [data, saveData, loading];
-};
+import React, { useState } from 'react';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [data, saveData, loading] = useFirebaseData();
 
   const handleLogin = () => {
     if (password === '1qstothemoon!') {
@@ -126,7 +55,7 @@ function App() {
             </div>
             <button
               onClick={() => setIsAuthenticated(false)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}
             >
               <span>Salir</span>
             </button>
@@ -137,7 +66,8 @@ function App() {
       <main style={{ maxWidth: '80rem', margin: '0 auto', padding: '1.5rem' }}>
         <div style={{ background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', padding: '3rem', textAlign: 'center' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Bienvenido a Quasart Style</h2>
-          <p style={{ color: '#6b7280' }}>Panel de control funcionando correctamente</p>
+          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>Tu panel de control está funcionando correctamente</p>
+          <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Próximamente: Dashboard completo con Firebase</p>
         </div>
       </main>
     </div>
