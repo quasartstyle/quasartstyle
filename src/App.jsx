@@ -33,13 +33,28 @@ const useFirebaseData = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const defaultData = {
+      lotes: [],
+      prendas: [],
+      gastos: [],
+      ingresos: [],
+      config: {
+        costeEnvio: 0.18,
+        costeLavado: 0.15,
+        alertaDias: 30,
+        alertaStock: 50,
+        alertaMargen: 60,
+        alertaDefectuosas: 40
+      }
+    };
+
     const docRef = doc(db, 'quasart', 'data');
     
     const unsubscribe = onSnapshot(docRef, (docSnap) => {
       if (docSnap.exists()) {
         setData(docSnap.data());
       } else {
-        setDoc(docRef, data);
+        setDoc(docRef, defaultData);
       }
       setLoading(false);
     });
