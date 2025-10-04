@@ -407,7 +407,9 @@ const InventarioManager = ({ data, setData }) => {
     lavada: false,
     destacada: false,
     resubida: false,
-    costeDestacado: ''
+    costeDestacado: '',
+    destacadaDespuesResubida: false,
+    costeDestacadoDespuesResubida: ''
   });
 
   const resetForm = () => {
@@ -423,7 +425,9 @@ const InventarioManager = ({ data, setData }) => {
       lavada: false,
       destacada: false,
       resubida: false,
-      costeDestacado: ''
+      costeDestacado: '',
+      destacadaDespuesResubida: false,
+      costeDestacadoDespuesResubida: ''
     });
     setEditingPrenda(null);
   };
@@ -442,7 +446,9 @@ const InventarioManager = ({ data, setData }) => {
       lavada: prenda.lavada || false,
       destacada: prenda.destacada || false,
       resubida: prenda.resubida || false,
-      costeDestacado: (prenda.costeDestacado || '').toString()
+      costeDestacado: (prenda.costeDestacado || '').toString(),
+      destacadaDespuesResubida: prenda.destacadaDespuesResubida || false,
+      costeDestacadoDespuesResubida: (prenda.costeDestacadoDespuesResubida || '').toString()
     });
     setShowModal(true);
   };
@@ -453,9 +459,14 @@ const InventarioManager = ({ data, setData }) => {
       return;
     }
     
-    // Validar que si está destacada, tenga coste
-    if (formData.destacada && !formData.costeDestacado) {
+    // Validar costes de destacados
+    if (formData.destacada && !formData.resubida && !formData.costeDestacado) {
       alert('Debes indicar el coste de destacar esta prenda');
+      return;
+    }
+    
+    if (formData.destacadaDespuesResubida && !formData.costeDestacadoDespuesResubida) {
+      alert('Debes indicar el coste de destacar después de resubir');
       return;
     }
     
@@ -485,9 +496,11 @@ const InventarioManager = ({ data, setData }) => {
       fechaVentaConfirmada: formData.fechaVentaConfirmada || null, 
       estado,
       lavada: formData.lavada,
-      destacada: formData.resubida ? false : formData.destacada, // Si está resubida, no puede estar destacada
+      destacada: formData.destacada,
       resubida: formData.resubida,
-      costeDestacado: (formData.destacada && !formData.resubida) ? parseFloat(formData.costeDestacado) || 0 : 0
+      costeDestacado: formData.destacada && !formData.resubida ? parseFloat(formData.costeDestacado) || 0 : 0,
+      destacadaDespuesResubida: formData.destacadaDespuesResubida || false,
+      costeDestacadoDespuesResubida: formData.destacadaDespuesResubida ? parseFloat(formData.costeDestacadoDespuesResubida) || 0 : 0
     };
     
     if (editingPrenda) {
@@ -531,8 +544,9 @@ const InventarioManager = ({ data, setData }) => {
                   <span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span>
                   <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: p.estado === 'comprada' ? '#f3f4f6' : p.estado === 'subida' ? '#dbeafe' : p.estado === 'vendida-pendiente' ? '#fef3c7' : '#d1fae5', color: p.estado === 'comprada' ? '#1f2937' : p.estado === 'subida' ? '#1e40af' : p.estado === 'vendida-pendiente' ? '#92400e' : '#065f46' }}>{p.estado}</span>
                   {p.lavada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af' }}>Lavada</span>}
-                  {p.destacada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada</span>}
+                  {p.destacada && !p.resubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada</span>}
                   {p.resubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><RefreshCw size={12} />Resubida</span>}
+                  {p.destacadaDespuesResubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada post-resubida</span>}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}>
                   <div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div>
@@ -574,20 +588,6 @@ const InventarioManager = ({ data, setData }) => {
                   <label htmlFor="lavada" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>¿Prenda lavada? (se añadirá coste de {data.config.costeLavado}€)</label>
                 </div>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input 
-                    type="checkbox" 
-                    id="resubida" 
-                    checked={formData.resubida} 
-                    onChange={(e) => setFormData({ ...formData, resubida: e.target.checked, destacada: e.target.checked ? false : formData.destacada })} 
-                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} 
-                  />
-                  <label htmlFor="resubida" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    <RefreshCw size={16} />
-                    ¿Prenda resubida?
-                  </label>
-                </div>
-                
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: formData.resubida ? 0.5 : 1 }}>
                   <input 
                     type="checkbox" 
@@ -617,9 +617,55 @@ const InventarioManager = ({ data, setData }) => {
                   </div>
                 )}
                 
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input 
+                    type="checkbox" 
+                    id="resubida" 
+                    checked={formData.resubida} 
+                    onChange={(e) => setFormData({ ...formData, resubida: e.target.checked })} 
+                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} 
+                  />
+                  <label htmlFor="resubida" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <RefreshCw size={16} />
+                    ¿Prenda resubida?
+                  </label>
+                </div>
+                
+                {formData.resubida && (
+                  <div style={{ marginLeft: '2rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                      <input 
+                        type="checkbox" 
+                        id="destacadaDespuesResubida" 
+                        checked={formData.destacadaDespuesResubida || false} 
+                        onChange={(e) => setFormData({ ...formData, destacadaDespuesResubida: e.target.checked })} 
+                        style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} 
+                      />
+                      <label htmlFor="destacadaDespuesResubida" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Star size={16} />
+                        ¿Destacada después de resubir?
+                      </label>
+                    </div>
+                    
+                    {formData.destacadaDespuesResubida && (
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem', color: '#f59e0b' }}>Coste de destacar después de resubir (€)</label>
+                        <input 
+                          type="number" 
+                          step="0.01" 
+                          value={formData.costeDestacadoDespuesResubida || ''} 
+                          onChange={(e) => setFormData({ ...formData, costeDestacadoDespuesResubida: e.target.value })} 
+                          style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem' }} 
+                          placeholder="1.95" 
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {formData.resubida && (
                   <div style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '2rem', fontStyle: 'italic' }}>
-                    * Las prendas resubidas no pueden estar destacadas
+                    * Si la prenda ya estaba destacada, ese estado se mantiene bloqueado
                   </div>
                 )}
               </div>
@@ -677,6 +723,237 @@ const ConfigManager = ({ data, setData }) => {
   );
 };
 
+const GastosIngresosManager = ({ data, setData }) => {
+  const [tab, setTab] = useState('gastos');
+  const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+  const [formData, setFormData] = useState({ concepto: '', cantidad: '', fecha: new Date().toISOString().slice(0, 10) });
+
+  const resetForm = () => {
+    setFormData({ concepto: '', cantidad: '', fecha: new Date().toISOString().slice(0, 10) });
+    setEditingItem(null);
+  };
+
+  const handleSubmit = () => {
+    if (!formData.concepto || !formData.cantidad || !formData.fecha) {
+      alert('Completa todos los campos');
+      return;
+    }
+
+    const nuevoItem = {
+      id: editingItem?.id || Date.now().toString(),
+      concepto: formData.concepto,
+      cantidad: parseFloat(formData.cantidad),
+      fecha: formData.fecha
+    };
+
+    if (tab === 'gastos') {
+      if (editingItem) {
+        setData({ ...data, gastos: data.gastos.map(g => g.id === editingItem.id ? nuevoItem : g) });
+      } else {
+        setData({ ...data, gastos: [...data.gastos, nuevoItem] });
+      }
+    } else {
+      if (editingItem) {
+        setData({ ...data, ingresos: data.ingresos.map(i => i.id === editingItem.id ? nuevoItem : i) });
+      } else {
+        setData({ ...data, ingresos: [...data.ingresos, nuevoItem] });
+      }
+    }
+
+    setShowModal(false);
+    resetForm();
+  };
+
+  const items = tab === 'gastos' ? data.gastos : data.ingresos;
+  const sortedItems = [...items].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Gastos e Ingresos</h2>
+        <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>
+          <Plus size={20} />
+          <span>Nuevo {tab === 'gastos' ? 'Gasto' : 'Ingreso'}</span>
+        </button>
+      </div>
+
+      <div style={{ background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ borderBottom: '1px solid #e5e7eb', display: 'flex', padding: '0 1.5rem' }}>
+          <button onClick={() => setTab('gastos')} style={{ padding: '1rem', borderBottom: tab === 'gastos' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: '500', color: tab === 'gastos' ? '#2563eb' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Gastos</button>
+          <button onClick={() => setTab('ingresos')} style={{ padding: '1rem', borderBottom: tab === 'ingresos' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: '500', color: tab === 'ingresos' ? '#2563eb' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Ingresos</button>
+        </div>
+
+        <div style={{ padding: '1.5rem' }}>
+          {sortedItems.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+              <p>No hay {tab} registrados</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {sortedItems.map(item => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: '600', marginBottom: '0.25rem' }}>{item.concepto}</p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{new Date(item.fecha).toLocaleDateString()}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <span style={{ fontSize: '1.125rem', fontWeight: 'bold', color: tab === 'gastos' ? '#dc2626' : '#10b981' }}>
+                      {tab === 'gastos' ? '-' : '+'}{item.cantidad.toFixed(2)} €
+                    </span>
+                    <button onClick={() => { setEditingItem(item); setFormData({ concepto: item.concepto, cantidad: item.cantidad.toString(), fecha: item.fecha }); setShowModal(true); }} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      <Edit2 size={18} />
+                    </button>
+                    <button onClick={() => { if (window.confirm('¿Eliminar?')) { if (tab === 'gastos') setData({ ...data, gastos: data.gastos.filter(g => g.id !== item.id) }); else setData({ ...data, ingresos: data.ingresos.filter(i => i.id !== item.id) }); } }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}>
+          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '32rem', width: '100%', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingItem ? 'Editar' : 'Nuevo'} {tab === 'gastos' ? 'Gasto' : 'Ingreso'}</h3>
+              <button onClick={() => { setShowModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                <X size={24} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Concepto</label>
+                <input type="text" value={formData.concepto} onChange={(e) => setFormData({ ...formData, concepto: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="Gasolina, publicidad, venta extra..." />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Cantidad (€)</label>
+                <input type="number" step="0.01" value={formData.cantidad} onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="50.00" />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha</label>
+                <input type="date" value={formData.fecha} onChange={(e) => setFormData({ ...formData, fecha: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleSubmit} style={{ flex: 1, padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const PagosManager = ({ data }) => {
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+
+  const getPagosPorMes = (month) => {
+    const [year, monthNum] = month.split('-');
+    const fechaMes = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+    
+    const pagos = [];
+    
+    data.lotes.forEach(lote => {
+      if (!lote.fecha) return;
+      
+      const fechaLote = new Date(lote.fecha);
+      const mesesPago = lote.mesesPago || 1;
+      const cuotaMensual = lote.costeTotal / mesesPago;
+      
+      for (let i = 0; i < mesesPago; i++) {
+        const fechaPago = new Date(fechaLote);
+        fechaPago.setMonth(fechaPago.getMonth() + i);
+        
+        if (fechaPago.getFullYear() === fechaMes.getFullYear() && 
+            fechaPago.getMonth() === fechaMes.getMonth()) {
+          pagos.push({
+            loteId: lote.id,
+            loteCodigo: lote.codigo,
+            proveedor: lote.proveedor,
+            cuota: i + 1,
+            totalCuotas: mesesPago,
+            cantidad: cuotaMensual,
+            fechaPago: fechaPago,
+            costeTotal: lote.costeTotal
+          });
+        }
+      }
+    });
+    
+    return pagos.sort((a, b) => a.fechaPago - b.fechaPago);
+  };
+
+  const pagos = getPagosPorMes(selectedMonth);
+  const totalMes = pagos.reduce((sum, p) => sum + p.cantidad, 0);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Calendario de Pagos</h2>
+      </div>
+
+      <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <Calendar size={20} style={{ color: '#6b7280' }} />
+          <input 
+            type="month" 
+            value={selectedMonth} 
+            onChange={(e) => setSelectedMonth(e.target.value)} 
+            style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} 
+          />
+          <div style={{ marginLeft: 'auto', fontSize: '1.25rem', fontWeight: 'bold', color: '#dc2626' }}>
+            Total: {totalMes.toFixed(2)} €
+          </div>
+        </div>
+
+        {pagos.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+            <p>No hay pagos programados para este mes</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {pagos.map((pago, idx) => (
+              <div key={`${pago.loteId}-${pago.cuota}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', background: '#f9fafb', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <span style={{ padding: '0.25rem 0.75rem', background: '#dbeafe', color: '#1e40af', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>
+                      {pago.loteCodigo}
+                    </span>
+                    <span style={{ fontWeight: '600', fontSize: '1rem' }}>{pago.proveedor}</span>
+                    {pago.totalCuotas > 1 && (
+                      <span style={{ padding: '0.125rem 0.5rem', background: '#fef3c7', color: '#92400e', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
+                        Cuota {pago.cuota}/{pago.totalCuotas}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '2rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                    <div>
+                      <span style={{ fontWeight: '500' }}>Fecha: </span>
+                      {pago.fechaPago.toLocaleDateString()}
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: '500' }}>Coste total lote: </span>
+                      {pago.costeTotal.toFixed(2)} €
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>
+                  {pago.cantidad.toFixed(2)} €
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -707,10 +984,15 @@ function App() {
   const gastosEnvio = prendasConfirmadas.length * data.config.costeEnvio;
   const gastosLavado = [...prendasConfirmadas, ...prendasPendientes].filter(p => p.lavada).length * data.config.costeLavado;
   
-  // NUEVO: Gastos de destacados del mes
-  const gastosDestacados = data.prendas
-    .filter(p => p.destacada && p.costeDestacado && p.fechaSubida && p.fechaSubida.startsWith(month))
-    .reduce((sum, p) => sum + (p.costeDestacado || 0), 0);
+// NUEVO: Gastos de destacados del mes (incluye destacados normales y después de resubir)
+const gastosDestacados = data.prendas
+  .filter(p => p.fechaSubida && p.fechaSubida.startsWith(month))
+  .reduce((sum, p) => {
+    let total = 0;
+    if (p.destacada && p.costeDestacado) total += p.costeDestacado;
+    if (p.destacadaDespuesResubida && p.costeDestacadoDespuesResubida) total += p.costeDestacadoDespuesResubida;
+    return sum + total;
+  }, 0);
   
   const gastosLotes = data.lotes.reduce((sum, lote) => {
     if (!lote.fecha) return sum;
@@ -812,11 +1094,13 @@ function App() {
       </header>
       <nav style={{ background: 'white', borderBottom: '1px solid #e5e7eb' }}>
         <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
-          <button onClick={() => setCurrentView('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'dashboard' ? '#2563eb' : 'transparent', color: currentView === 'dashboard' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><BarChart3 size={20} /><span style={{ fontWeight: '500' }}>Dashboard</span></button>
-          <button onClick={() => setCurrentView('estadisticas')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'estadisticas' ? '#2563eb' : 'transparent', color: currentView === 'estadisticas' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><PieChart size={20} /><span style={{ fontWeight: '500' }}>Estadísticas</span></button>
+          <button onClick={() => setCurrentView('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'dashboard' ? '#2563eb' : 'transparent', color: currentView === 'dashboard' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><BarChart3 size={20} /><span style={{ fontWeight: '500' }}>Inicio</span></button>
           <button onClick={() => setCurrentView('lotes')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'lotes' ? '#2563eb' : 'transparent', color: currentView === 'lotes' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><Package size={20} /><span style={{ fontWeight: '500' }}>Lotes</span></button>
           <button onClick={() => setCurrentView('inventario')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'inventario' ? '#2563eb' : 'transparent', color: currentView === 'inventario' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><TrendingUp size={20} /><span style={{ fontWeight: '500' }}>Inventario</span></button>
-          <button onClick={() => setCurrentView('config')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'config' ? '#2563eb' : 'transparent', color: currentView === 'config' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><Settings size={20} /><span style={{ fontWeight: '500' }}>Config</span></button>
+          <button onClick={() => setCurrentView('gastosIngresos')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'gastosIngresos' ? '#2563eb' : 'transparent', color: currentView === 'gastosIngresos' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><TrendingUp size={20} /><span style={{ fontWeight: '500' }}>Gastos/Ingresos</span></button>
+          <button onClick={() => setCurrentView('pagos')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'pagos' ? '#2563eb' : 'transparent', color: currentView === 'pagos' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><Calendar size={20} /><span style={{ fontWeight: '500' }}>Pagos</span></button>
+          <button onClick={() => setCurrentView('estadisticas')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'estadisticas' ? '#2563eb' : 'transparent', color: currentView === 'estadisticas' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><PieChart size={20} /><span style={{ fontWeight: '500' }}>Estadísticas</span></button>
+          <button onClick={() => setCurrentView('config')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'config' ? '#2563eb' : 'transparent', color: currentView === 'config' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><Settings size={20} /><span style={{ fontWeight: '500' }}>Configuración</span></button>
         </div>
       </nav>
       {alerts.length > 0 && (
@@ -1100,6 +1384,8 @@ function App() {
         )}
         {currentView === 'lotes' && <LotesManager data={data} setData={saveData} />}
         {currentView === 'inventario' && <InventarioManager data={data} setData={saveData} />}
+        {currentView === 'gastosIngresos' && <GastosIngresosManager data={data} setData={saveData} />}
+        {currentView === 'pagos' && <PagosManager data={data} />}
         {currentView === 'config' && <ConfigManager data={data} setData={saveData} />}
       </main>
     </div>
