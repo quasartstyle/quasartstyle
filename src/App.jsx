@@ -111,21 +111,33 @@ const LotesManager = ({ data, setData }) => {
       return sum + (parseFloat(det.precio) || 0);
     }, 0);
     
-    const totalIvaPrendas = subtotalPrendas * (parseFloat(formData.ivaPrendas) / 100);
-    const totalPrendas = subtotalPrendas + totalIvaPrendas;
+    const descuento = formData.tieneDescuento ? (parseFloat(formData.descuento) || 0) : 0;
+    const subtotalConDescuento = subtotalPrendas - descuento;
+    
+    // IVA se aplica después del descuento
+    const totalIvaPrendas = subtotalConDescuento * (parseFloat(formData.ivaPrendas) / 100);
+    const totalPrendas = subtotalConDescuento + totalIvaPrendas;
     
     const gastoEnvio = parseFloat(formData.gastoEnvio) || 0;
     const ivaEnvio = gastoEnvio * (parseFloat(formData.ivaEnvio) / 100);
     const totalEnvio = gastoEnvio + ivaEnvio;
     
-    const descuento = formData.tieneDescuento ? (parseFloat(formData.descuento) || 0) : 0;
-    
-    const total = totalPrendas + totalEnvio - descuento;
+    const total = totalPrendas + totalEnvio;
     const cantidadTotal = Object.values(formData.detallesPrendas).reduce((sum, det) => {
       return sum + (parseInt(det.cantidad) || 0);
     }, 0);
     
-    return { subtotalPrendas, totalIvaPrendas, totalPrendas, gastoEnvio, ivaEnvio, totalEnvio, descuento, total, cantidadTotal };
+    // Calcular precios unitarios por tipo
+    const preciosUnitarios = {};
+    Object.entries(formData.detallesPrendas).forEach(([tipo, det]) => {
+      const cantidad = parseInt(det.cantidad) || 0;
+      const precio = parseFloat(det.precio) || 0;
+      if (cantidad > 0) {
+        preciosUnitarios[tipo] = precio / cantidad;
+      }
+    });
+    
+    return { subtotalPrendas, descuento, subtotalConDescuento, totalIvaPrendas, totalPrendas, gastoEnvio, ivaEnvio, totalEnvio, total, cantidadTotal, preciosUnitarios };
   };
 
   const handleSubmit = () => {
@@ -138,7 +150,6 @@ const LotesManager = ({ data, setData }) => {
       return;
     }
     
-    // Validar que todos los tipos tengan cantidad y precio
     for (const tipo of formData.tiposPrendas) {
       const det = formData.detallesPrendas[tipo];
       if (!det.cantidad || !det.precio) {
@@ -161,6 +172,7 @@ const LotesManager = ({ data, setData }) => {
       prendasInutiles: parseInt(formData.prendasInutiles),
       tiposPrendas: formData.tiposPrendas,
       detallesPrendas: formData.detallesPrendas,
+      preciosUnitarios: totales.preciosUnitarios,
       ivaPrendas: parseFloat(formData.ivaPrendas),
       gastoEnvio: parseFloat(formData.gastoEnvio) || 0,
       ivaEnvio: parseFloat(formData.ivaEnvio),
@@ -205,17 +217,17 @@ const LotesManager = ({ data, setData }) => {
                   <span style={{ color: '#6b7280' }}>{lote.proveedor}</span>
                   {lote.tiposPrendas && lote.tiposPrendas.map(tipo => (
                     <span key={tipo} style={{ padding: '0.25rem 0.5rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
-                      {tipo} ({lote.detallesPrendas?.[tipo]?.cantidad || 0})
+                      {tipo} ({lote.detallesPrendas?.[tipo]?.cantidad || 0}) - {lote.preciosUnitarios?.[tipo]?.toFixed(2) || '0.00'}€/u
                     </span>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Fecha</p><p style={{ fontWeight: '600' }}>{new Date(lote.fecha).toLocaleDateString()}</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Unitario</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Inútiles</p><p style={{ fontWeight: '600' }}>{lote.prendasInutiles || 0}</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Forma de Pago</p><p style={{ fontWeight: '600' }}>{lote.mesesPago === 1 ? 'Pago único' : `${lote.mesesPago} meses`}</p></div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}>
+                  <div><p style={{ color: '#6b7280' }}>Fecha</p><p style={{ fontWeight: '600' }}>{new Date(lote.fecha).toLocaleDateString()}</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Total Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Coste Unitario Medio</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Inútiles</p><p style={{ fontWeight: '600' }}>{lote.prendasInutiles || 0}</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Forma de Pago</p><p style={{ fontWeight: '600' }}>{lote.mesesPago === 1 ? 'Pago único' : `${lote.mesesPago} meses`}</p></div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -279,18 +291,39 @@ const LotesManager = ({ data, setData }) => {
               {formData.tiposPrendas.length > 0 && (
                 <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '0.5rem' }}>
                   <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1f2937' }}>Detalles por tipo de prenda</h4>
-                  {formData.tiposPrendas.map(tipo => (
-                    <div key={tipo} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>{tipo}</span>
-                      <input type="number" placeholder="Cantidad" value={formData.detallesPrendas[tipo]?.cantidad || ''} onChange={(e) => handleDetalleChange(tipo, 'cantidad', e.target.value)} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} />
-                      <input type="number" step="0.01" placeholder="Precio total €" value={formData.detallesPrendas[tipo]?.precio || ''} onChange={(e) => handleDetalleChange(tipo, 'precio', e.target.value)} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} />
-                    </div>
-                  ))}
+                  {formData.tiposPrendas.map(tipo => {
+                    const cantidad = parseInt(formData.detallesPrendas[tipo]?.cantidad) || 0;
+                    const precio = parseFloat(formData.detallesPrendas[tipo]?.precio) || 0;
+                    const precioUnitario = cantidad > 0 ? precio / cantidad : 0;
+                    return (
+                      <div key={tipo} style={{ marginBottom: '0.75rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', alignItems: 'center' }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>{tipo}</span>
+                          <input type="number" placeholder="Cantidad" value={formData.detallesPrendas[tipo]?.cantidad || ''} onChange={(e) => handleDetalleChange(tipo, 'cantidad', e.target.value)} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} />
+                          <input type="number" step="0.01" placeholder="Precio total €" value={formData.detallesPrendas[tipo]?.precio || ''} onChange={(e) => handleDetalleChange(tipo, 'precio', e.target.value)} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} />
+                        </div>
+                        {cantidad > 0 && precio > 0 && (
+                          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem', paddingLeft: '0.5rem' }}>
+                            Precio unitario: {precioUnitario.toFixed(2)} €/unidad
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
               <div style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '0.5rem' }}>
                 <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1f2937' }}>Costes adicionales</h4>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                  <input type="checkbox" id="tieneDescuento" checked={formData.tieneDescuento} onChange={(e) => setFormData({ ...formData, tieneDescuento: e.target.checked })} style={{ cursor: 'pointer' }} />
+                  <label htmlFor="tieneDescuento" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>Aplicar descuento</label>
+                </div>
+                {formData.tieneDescuento && (
+                  <div style={{ marginBottom: '0.75rem' }}><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>Descuento (€)</label><input type="number" step="0.01" value={formData.descuento} onChange={(e) => setFormData({ ...formData, descuento: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
+                )}
+                
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.75rem' }}>
                   <div><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>IVA Prendas (%)</label><input type="number" step="0.01" value={formData.ivaPrendas} onChange={(e) => setFormData({ ...formData, ivaPrendas: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
                   <div style={{ display: 'flex', alignItems: 'end', fontSize: '0.875rem', color: '#6b7280' }}>+{totales.totalIvaPrendas.toFixed(2)} €</div>
@@ -298,14 +331,6 @@ const LotesManager = ({ data, setData }) => {
                   <div><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>Gasto Envío (€)</label><input type="number" step="0.01" value={formData.gastoEnvio} onChange={(e) => setFormData({ ...formData, gastoEnvio: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
                   <div><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>IVA Envío (%)</label><input type="number" step="0.01" value={formData.ivaEnvio} onChange={(e) => setFormData({ ...formData, ivaEnvio: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
                 </div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem' }}>
-                  <input type="checkbox" id="tieneDescuento" checked={formData.tieneDescuento} onChange={(e) => setFormData({ ...formData, tieneDescuento: e.target.checked })} style={{ cursor: 'pointer' }} />
-                  <label htmlFor="tieneDescuento" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>Aplicar descuento</label>
-                </div>
-                {formData.tieneDescuento && (
-                  <div style={{ marginTop: '0.5rem' }}><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>Descuento (€)</label><input type="number" step="0.01" value={formData.descuento} onChange={(e) => setFormData({ ...formData, descuento: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
-                )}
               </div>
 
               <div style={{ background: '#ecfdf5', padding: '1rem', borderRadius: '0.5rem' }}>
@@ -313,30 +338,34 @@ const LotesManager = ({ data, setData }) => {
                   <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Subtotal prendas:</span>
                   <span style={{ fontWeight: '600' }}>{totales.subtotalPrendas.toFixed(2)} €</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>IVA prendas:</span>
-                  <span style={{ fontWeight: '600' }}>+{totales.totalIvaPrendas.toFixed(2)} €</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Envío + IVA:</span>
-                  <span style={{ fontWeight: '600' }}>+{totales.totalEnvio.toFixed(2)} €</span>
-                </div>
                 {totales.descuento > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Descuento:</span>
                     <span style={{ fontWeight: '600', color: '#dc2626' }}>-{totales.descuento.toFixed(2)} €</span>
                   </div>
                 )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Subtotal con descuento:</span>
+                  <span style={{ fontWeight: '600' }}>{totales.subtotalConDescuento.toFixed(2)} €</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>IVA prendas ({formData.ivaPrendas}%):</span>
+                  <span style={{ fontWeight: '600' }}>+{totales.totalIvaPrendas.toFixed(2)} €</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Envío + IVA:</span>
+                  <span style={{ fontWeight: '600' }}>+{totales.totalEnvio.toFixed(2)} €</span>
+                </div>
                 <div style={{ borderTop: '2px solid #10b981', paddingTop: '0.5rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '1rem', fontWeight: '700', color: '#065f46' }}>TOTAL:</span>
                   <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#065f46' }}>{totales.total.toFixed(2)} €</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total prendas:</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{totales.cantidadTotal}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Precio unitario:</span>
+                  <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Precio unitario medio:</span>
                   <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{totales.cantidadTotal > 0 ? (totales.total / totales.cantidadTotal).toFixed(2) : '0.00'} €</span>
                 </div>
               </div>
@@ -360,6 +389,7 @@ const LotesManager = ({ data, setData }) => {
     </div>
   );
 };
+
 const InventarioManager = ({ data, setData }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingPrenda, setEditingPrenda] = useState(null);
