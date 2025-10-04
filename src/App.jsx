@@ -395,6 +395,7 @@ const InventarioManager = ({ data, setData }) => {
   const [editingPrenda, setEditingPrenda] = useState(null);
   const [filtro, setFiltro] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
+  const [ordenamiento, setOrdenamiento] = useState('recientes'); // nuevo
   const [formData, setFormData] = useState({ 
     loteId: '', 
     tipo: '', 
@@ -411,7 +412,10 @@ const InventarioManager = ({ data, setData }) => {
     fechaGastoDestacado: '',
     destacadaDespuesResubida: false,
     costeDestacadoDespuesResubida: '',
-    fechaGastoDestacadoDespuesResubida: ''
+    fechaGastoDestacadoDespuesResubida: '',
+    devuelta: false,
+    tipoDevolucion: '',
+    fechaDevolucion: ''
   });
 
   const resetForm = () => {
@@ -431,7 +435,10 @@ const InventarioManager = ({ data, setData }) => {
       fechaGastoDestacado: '',
       destacadaDespuesResubida: false,
       costeDestacadoDespuesResubida: '',
-      fechaGastoDestacadoDespuesResubida: ''
+      fechaGastoDestacadoDespuesResubida: '',
+      devuelta: false,
+      tipoDevolucion: '',
+      fechaDevolucion: ''
     });
     setEditingPrenda(null);
   };
@@ -454,7 +461,10 @@ const InventarioManager = ({ data, setData }) => {
       fechaGastoDestacado: prenda.fechaGastoDestacado || '',
       destacadaDespuesResubida: prenda.destacadaDespuesResubida || false,
       costeDestacadoDespuesResubida: (prenda.costeDestacadoDespuesResubida || '').toString(),
-      fechaGastoDestacadoDespuesResubida: prenda.fechaGastoDestacadoDespuesResubida || ''
+      fechaGastoDestacadoDespuesResubida: prenda.fechaGastoDestacadoDespuesResubida || '',
+      devuelta: prenda.devuelta || false,
+      tipoDevolucion: prenda.tipoDevolucion || '',
+      fechaDevolucion: prenda.fechaDevolucion || ''
     });
     setShowModal(true);
   };
@@ -465,7 +475,6 @@ const InventarioManager = ({ data, setData }) => {
       return;
     }
     
-    // Validar costes de destacados
     if (formData.destacada && !formData.resubida && !formData.costeDestacado) {
       alert('Debes indicar el coste de destacar esta prenda');
       return;
@@ -476,13 +485,24 @@ const InventarioManager = ({ data, setData }) => {
       return;
     }
     
+    if (formData.devuelta && !formData.tipoDevolucion) {
+      alert('Debes seleccionar el tipo de devolución');
+      return;
+    }
+    
     const lote = data.lotes.find(l => l.id === formData.loteId);
     if (!lote) return;
     
     let estado = 'comprada';
-    if (formData.fechaVentaConfirmada) estado = 'vendida-confirmada';
-    else if (formData.fechaVentaPendiente) estado = 'vendida-pendiente';
-    else if (formData.fechaSubida) estado = 'subida';
+    if (formData.devuelta) {
+      estado = 'devuelta';
+    } else if (formData.fechaVentaConfirmada) {
+      estado = 'vendida-confirmada';
+    } else if (formData.fechaVentaPendiente) {
+      estado = 'vendida-pendiente';
+    } else if (formData.fechaSubida) {
+      estado = 'subida';
+    }
     
     const prendaData = {
       id: editingPrenda?.id || Date.now().toString(), 
@@ -508,7 +528,11 @@ const InventarioManager = ({ data, setData }) => {
       fechaGastoDestacado: formData.destacada && !formData.resubida ? formData.fechaGastoDestacado : null,
       destacadaDespuesResubida: formData.destacadaDespuesResubida || false,
       costeDestacadoDespuesResubida: formData.destacadaDespuesResubida ? parseFloat(formData.costeDestacadoDespuesResubida) || 0 : 0,
-      fechaGastoDestacadoDespuesResubida: formData.destacadaDespuesResubida ? formData.fechaGastoDestacadoDespuesResubida : null
+      fechaGastoDestacadoDespuesResubida: formData.destacadaDespuesResubida ? formData.fechaGastoDestacadoDespuesResubida : null,
+      devuelta: formData.devuelta || false,
+      tipoDevolucion: formData.devuelta ? formData.tipoDevolucion : null,
+      fechaDevolucion: formData.devuelta ? formData.fechaDevolucion : null,
+      createdAt: editingPrenda?.createdAt || Date.now()
     };
     
     if (editingPrenda) {
@@ -518,6 +542,25 @@ const InventarioManager = ({ data, setData }) => {
     }
     setShowModal(false);
     resetForm();
+  };
+
+  const prendasOrdenadas = [...prendas].sort((a, b) => {
+    if (ordenamiento === 'recientes') {
+      return (b.createdAt || 0) - (a.createdAt || 0);
+    } else {
+      return (a.createdAt || 0) - (b.createdAt || 0);
+    }
+  });
+
+  const getEstadoColor = (estado) => {
+    const colores = {
+      'comprada': { bg: '#f3f4f6', text: '#1f2937' },
+      'subida': { bg: '#dbeafe', text: '#1e40af' },
+      'vendida-pendiente': { bg: '#fef3c7', text: '#92400e' },
+      'vendida-confirmada': { bg: '#d1fae5', text: '#065f46' },
+      'devuelta': { bg: '#fee2e2', text: '#991b1b' }
+    };
+    return colores[estado] || colores['comprada'];
   };
 
   const prendas = data.prendas.filter(p => {
@@ -703,6 +746,48 @@ const InventarioManager = ({ data, setData }) => {
                   </div>
                 </div>
               </div>
+            </div>
+            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem', marginTop: '1rem' }}>
+              <h4 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>¿Prenda devuelta?</h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <input 
+                  type="checkbox" 
+                  id="devuelta" 
+                  checked={formData.devuelta || false} 
+                  onChange={(e) => setFormData({ ...formData, devuelta: e.target.checked, tipoDevolucion: e.target.checked ? formData.tipoDevolucion : '' })} 
+                  style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} 
+                />
+                <label htmlFor="devuelta" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>
+                  Marcar como devuelta
+                </label>
+              </div>
+              
+              {formData.devuelta && (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Tipo de devolución</label>
+                  <select 
+                    value={formData.tipoDevolucion || ''} 
+                    onChange={(e) => setFormData({ ...formData, tipoDevolucion: e.target.value })} 
+                    style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}
+                  >
+                    <option value="">Selecciona tipo</option>
+                    <option value="gastos-comprador">Gastos de envío pagados por el comprador</option>
+                    <option value="gastos-nosotros">Gastos de envío pagados por nosotros</option>
+                    <option value="prenda-dinero-nosotros">Prenda y dinero para nosotros</option>
+                    <option value="prenda-dinero-cliente">Prenda y dinero para el cliente</option>
+                  </select>
+                  
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha de devolución</label>
+                    <input 
+                      type="date" 
+                      value={formData.fechaDevolucion || ''} 
+                      onChange={(e) => setFormData({ ...formData, fechaDevolucion: e.target.value })} 
+                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} 
+                    />
+                  </div>
+                </div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button>
@@ -1350,10 +1435,9 @@ function App() {
                   const totalCostes = prendasVendidasMes.reduce((sum, p) => sum + p.precioCompra, 0);
                   const margenBruto = totalVentas > 0 ? ((totalVentas - totalCostes) / totalVentas * 100) : 0;
                   
-                  // Tasa de devoluciones: prendas que estaban en vendida-confirmada y volvieron a otro estado
-                  // Como no tenemos historial, asumimos que las devoluciones están en data.gastos o ingresos
-                  // Por simplicidad, calculamos un estimado basado en prendas problemáticas
-                  const tasaDevoluciones = 1.5; // Valor por defecto del PDF
+                  // Tasa de devoluciones real basada en prendas devueltas
+                  const prendasDevueltasMes = data.prendas.filter(p => p.devuelta && p.fechaDevolucion && p.fechaDevolucion.startsWith(selectedMonth)).length;
+                  const tasaDevoluciones = prendasVendidasMes.length > 0 ? (prendasDevueltasMes / prendasVendidasMes.length * 100) : 0;
                   
                   return (
                     <>
@@ -1362,7 +1446,11 @@ function App() {
                       <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Ticket medio</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>{ticketMedio.toFixed(2)} €</div></div>
                       <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Coste promedio compra</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{costePromedio.toFixed(2)} €</div></div>
                       <div style={{ background: '#d1fae5', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#065f46', marginBottom: '0.25rem' }}>Margen bruto promedio</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#065f46' }}>{margenBruto.toFixed(2)} %</div></div>
-                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tasa de devoluciones</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>{tasaDevoluciones.toFixed(2)} %</div></div>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tasa de devoluciones</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>{tasaDevoluciones.toFixed(2)} %</div>
+                        <div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '0.25rem' }}>{prendasDevueltasMes} devueltas de {prendasVendidasMes.length}</div>
+                      </div>
                     </>
                   );
                 })()}
