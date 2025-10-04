@@ -680,52 +680,53 @@ const InventarioManager = ({ data, setData }) => {
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {esDevuelta && p.tipoDevolucion !== 'prenda-dinero-cliente' ? (
-                    <button 
-                      onClick={() => {
-                        if (window.confirm('¿Reingresar esta prenda al inventario? Se le asignará un nuevo SKU y se reiniciará su estado.')) {
-                          const nuevoSKU = `QS-${(data.prendas.length + 1).toString().padStart(4, '0')}`;
-                          const prendaReingresada = {
-                            ...p,
-                            sku: nuevoSKU,
-                            estado: 'comprada',
-                            fechaSubida: null,
-                            fechaVentaPendiente: null,
-                            fechaVentaConfirmada: null,
-                            precioVentaReal: 0,
-                            devuelta: false,
-                            tipoDevolucion: null,
-                            fechaDevolucion: null,
-                            costeEnvioDevolucion: 0,
-                            destacada: false,
-                            resubida: false,
-                            destacadaDespuesResubida: false,
-                            costeDestacado: 0,
-                            costeDestacadoDespuesResubida: 0,
-                            fechaGastoDestacado: null,
-                            fechaGastoDestacadoDespuesResubida: null,
-                            createdAt: Date.now()
-                          };
-                          setData({ ...data, prendas: data.prendas.map(pr => pr.id === p.id ? prendaReingresada : pr) });
-                        }
-                      }}
-                      style={{ 
-                        padding: '0.75rem', 
-                        color: 'white', 
-                        background: '#10b981', 
-                        border: 'none', 
-                        cursor: 'pointer',
-                        borderRadius: '0.5rem',
-                        fontWeight: '600',
-                        fontSize: '0.875rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}
-                    >
-                      <RefreshCw size={16} />
-                      Reingresar
-                    </button>
+                {esDevuelta && p.tipoDevolucion !== 'prenda-dinero-cliente' ? (
+                  <button 
+                    onClick={() => {
+                      if (window.confirm('¿Reingresar esta prenda al inventario? Se le asignará un nuevo SKU y volverá al estado inicial.')) {
+                        const nuevoSKU = `QS-${(data.prendas.length + 1).toString().padStart(4, '0')}`;
+                        const prendaReingresada = {
+                          ...p,
+                          sku: nuevoSKU,
+                          estado: 'subida',  // ← Estado inicial correcto
+                          fechaSubida: null,
+                          fechaVentaPendiente: null,
+                          fechaVentaConfirmada: null,
+                          precioVentaReal: 0,
+                          precioObjetivo: 0,
+                          devuelta: false,
+                          tipoDevolucion: null,
+                          fechaDevolucion: null,
+                          costeEnvioDevolucion: 0,
+                          destacada: false,
+                          resubida: false,
+                          destacadaDespuesResubida: false,
+                          costeDestacado: 0,
+                          costeDestacadoDespuesResubida: 0,
+                          fechaGastoDestacado: null,
+                          fechaGastoDestacadoDespuesResubida: null,
+                          createdAt: Date.now()
+                        };
+                        setData({ ...data, prendas: data.prendas.map(pr => pr.id === p.id ? prendaReingresada : pr) });
+                      }
+                    }}
+                    style={{ 
+                      padding: '0.75rem', 
+                      color: 'white', 
+                      background: '#10b981', 
+                      border: 'none', 
+                      cursor: 'pointer',
+                      borderRadius: '0.5rem',
+                      fontWeight: '600',
+                      fontSize: '0.875rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    <RefreshCw size={16} />
+                    Reingresar
+                  </button>
                   ) : esDevuelta && p.tipoDevolucion === 'prenda-dinero-cliente' ? (
                     <div style={{ padding: '0.5rem', color: '#dc2626', fontSize: '0.75rem', textAlign: 'center', fontWeight: '600' }}>
                       No reingresable
@@ -889,7 +890,16 @@ const InventarioManager = ({ data, setData }) => {
                   type="checkbox" 
                   id="devuelta" 
                   checked={formData.devuelta || false} 
-                  onChange={(e) => setFormData({ ...formData, devuelta: e.target.checked, tipoDevolucion: e.target.checked ? formData.tipoDevolucion : '' })} 
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    setFormData({ 
+                      ...formData, 
+                      devuelta: isChecked, 
+                      tipoDevolucion: isChecked ? formData.tipoDevolucion : '', 
+                      fechaDevolucion: isChecked ? formData.fechaDevolucion : '', 
+                      costeEnvioDevolucion: isChecked ? formData.costeEnvioDevolucion : '' 
+                    });
+                  }} 
                   style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} 
                 />
                 <label htmlFor="devuelta" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>
@@ -898,29 +908,69 @@ const InventarioManager = ({ data, setData }) => {
               </div>
               
               {formData.devuelta && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Tipo de devolución</label>
-                  <select 
-                    value={formData.tipoDevolucion || ''} 
-                    onChange={(e) => setFormData({ ...formData, tipoDevolucion: e.target.value })} 
-                    style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}
-                  >
-                    <option value="">Selecciona tipo</option>
-                    <option value="gastos-comprador">Gastos de envío pagados por el comprador</option>
-                    <option value="gastos-nosotros">Gastos de envío pagados por nosotros</option>
-                    <option value="prenda-dinero-nosotros">Prenda y dinero para nosotros</option>
-                    <option value="prenda-dinero-cliente">Prenda y dinero para el cliente</option>
-                  </select>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: '#fef2f2', padding: '1rem', borderRadius: '0.5rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem', color: '#991b1b' }}>
+                      Tipo de devolución *
+                    </label>
+                    <select 
+                      value={formData.tipoDevolucion || ''} 
+                      onChange={(e) => {
+                        const nuevoTipo = e.target.value;
+                        setFormData({ 
+                          ...formData, 
+                          tipoDevolucion: nuevoTipo, 
+                          costeEnvioDevolucion: nuevoTipo === 'gastos-nosotros' ? formData.costeEnvioDevolucion : '' 
+                        });
+                      }} 
+                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #dc2626', borderRadius: '0.5rem' }}
+                    >
+                      <option value="">Selecciona tipo</option>
+                      <option value="gastos-comprador">Gastos de envío pagados por el comprador</option>
+                      <option value="gastos-nosotros">Gastos de envío pagados por nosotros</option>
+                      <option value="prenda-dinero-nosotros">Prenda y dinero para nosotros</option>
+                      <option value="prenda-dinero-cliente">Prenda y dinero para el cliente</option>
+                    </select>
+                  </div>
                   
-                  <div style={{ marginTop: '0.75rem' }}>
-                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha de devolución</label>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem', color: '#991b1b' }}>
+                      Fecha de devolución *
+                    </label>
                     <input 
                       type="date" 
                       value={formData.fechaDevolucion || ''} 
                       onChange={(e) => setFormData({ ...formData, fechaDevolucion: e.target.value })} 
-                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} 
+                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #dc2626', borderRadius: '0.5rem' }} 
                     />
                   </div>
+                  
+                  {formData.tipoDevolucion === 'gastos-nosotros' && (
+                    <div style={{ background: '#fee2e2', padding: '1rem', borderRadius: '0.5rem', border: '2px solid #dc2626' }}>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem', color: '#7f1d1d' }}>
+                        💰 Coste del envío de devolución (€) *
+                      </label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        value={formData.costeEnvioDevolucion || ''} 
+                        onChange={(e) => setFormData({ ...formData, costeEnvioDevolucion: e.target.value })} 
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #7f1d1d', borderRadius: '0.5rem', fontSize: '1rem' }} 
+                        placeholder="Ej: 5.50"
+                      />
+                      <p style={{ fontSize: '0.75rem', color: '#7f1d1d', marginTop: '0.5rem', fontWeight: '500' }}>
+                        ⚠️ Este coste se registrará como un gasto adicional
+                      </p>
+                    </div>
+                  )}
+                  
+                  {formData.tipoDevolucion === 'prenda-dinero-cliente' && (
+                    <div style={{ background: '#fef3c7', padding: '0.75rem', borderRadius: '0.5rem', border: '2px solid #f59e0b' }}>
+                      <p style={{ fontSize: '0.875rem', color: '#92400e', fontWeight: '600' }}>
+                        ⚠️ Esta prenda NO podrá ser reingresada al inventario
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
