@@ -591,40 +591,145 @@ const InventarioManager = ({ data, setData }) => {
           </select>
         </div>
       </div>
-      {prendas.length === 0 ? (
+      {prendasOrdenadas.length === 0 ? (
         <div style={{ background: 'white', borderRadius: '0.5rem', padding: '3rem', textAlign: 'center' }}>
           <Package size={48} style={{ margin: '0 auto 1rem', color: '#9ca3af' }} />
           <p style={{ color: '#6b7280' }}>No hay prendas</p>
         </div>
       ) : (
-        prendas.map(p => (
-          <div key={p.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
-                  <span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span>
-                  <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: p.estado === 'comprada' ? '#f3f4f6' : p.estado === 'subida' ? '#dbeafe' : p.estado === 'vendida-pendiente' ? '#fef3c7' : '#d1fae5', color: p.estado === 'comprada' ? '#1f2937' : p.estado === 'subida' ? '#1e40af' : p.estado === 'vendida-pendiente' ? '#92400e' : '#065f46' }}>{p.estado}</span>
-                  {p.lavada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af' }}>Lavada</span>}
-                  {p.destacada && !p.resubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada</span>}
-                  {p.resubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><RefreshCw size={12} />Resubida</span>}
-                  {p.destacadaDespuesResubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada post-resubida</span>}
+        prendasOrdenadas.map(p => {
+          const estadoColor = getEstadoColor(p.estado);
+          const esVendida = p.estado === 'vendida-confirmada';
+          const esDevuelta = p.estado === 'devuelta';
+          
+          return (
+            <div 
+              key={p.id} 
+              style={{ 
+                background: esVendida ? '#ecfdf5' : esDevuelta ? '#fef2f2' : p.estado === 'vendida-pendiente' ? '#fffbeb' : 'white',
+                borderRadius: '0.5rem', 
+                padding: '1.5rem', 
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)', 
+                border: `3px solid ${esVendida ? '#10b981' : esDevuelta ? '#dc2626' : p.estado === 'vendida-pendiente' ? '#f59e0b' : p.estado === 'subida' ? '#3b82f6' : '#e5e7eb'}`
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span>
+                    <span style={{ 
+                      padding: '0.5rem 1rem', 
+                      borderRadius: '1rem', 
+                      fontSize: '0.875rem', 
+                      fontWeight: '700',
+                      background: estadoColor.bg, 
+                      color: estadoColor.text,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>
+                      {p.estado === 'vendida-confirmada' && '✓ VENDIDA'}
+                      {p.estado === 'vendida-pendiente' && '⏳ PENDIENTE'}
+                      {p.estado === 'devuelta' && '↩ DEVUELTA'}
+                      {p.estado === 'subida' && '📤 EN VINTED'}
+                      {p.estado === 'comprada' && '📦 COMPRADA'}
+                    </span>
+                    {esVendida && (
+                      <span style={{ padding: '0.25rem 0.75rem', background: '#d1fae5', color: '#065f46', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '600' }}>
+                        🎉 Completada
+                      </span>
+                    )}
+                    {p.lavada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af' }}>Lavada</span>}
+                    {p.destacada && !p.resubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada</span>}
+                    {p.resubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><RefreshCw size={12} />Resubida</span>}
+                    {p.destacadaDespuesResubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada post-resubida</span>}
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}>
+                    <div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div>
+                    <div><p style={{ color: '#6b7280' }}>Tipo</p><p style={{ fontWeight: '600' }}>{p.tipo}</p></div>
+                    <div><p style={{ color: '#6b7280' }}>Talla</p><p style={{ fontWeight: '600' }}>{p.talla}</p></div>
+                    <div><p style={{ color: '#6b7280' }}>Compra</p><p style={{ fontWeight: '600' }}>{p.precioCompra.toFixed(2)} €</p></div>
+                    <div><p style={{ color: '#6b7280' }}>Venta</p><p style={{ fontWeight: '600', color: '#10b981' }}>{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div>
+                    {p.destacada && p.costeDestacado > 0 && <div><p style={{ color: '#6b7280' }}>Coste Destacado</p><p style={{ fontWeight: '600', color: '#f59e0b' }}>{p.costeDestacado.toFixed(2)} €</p></div>}
+                    {p.destacadaDespuesResubida && p.costeDestacadoDespuesResubida > 0 && <div><p style={{ color: '#6b7280' }}>Coste Destacado Post-resubida</p><p style={{ fontWeight: '600', color: '#f59e0b' }}>{p.costeDestacadoDespuesResubida.toFixed(2)} €</p></div>}
+                  </div>
+                  {p.devuelta && p.tipoDevolucion && (
+                    <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem', border: '2px solid #fecaca' }}>
+                      <p style={{ fontSize: '0.75rem', fontWeight: '600', color: '#991b1b', marginBottom: '0.25rem' }}>Tipo de devolución:</p>
+                      <p style={{ fontSize: '0.875rem', color: '#dc2626' }}>
+                        {p.tipoDevolucion === 'gastos-comprador' && 'Gastos de envío pagados por el comprador'}
+                        {p.tipoDevolucion === 'gastos-nosotros' && 'Gastos de envío pagados por nosotros'}
+                        {p.tipoDevolucion === 'prenda-dinero-nosotros' && 'Prenda y dinero para nosotros'}
+                        {p.tipoDevolucion === 'prenda-dinero-cliente' && 'Prenda y dinero para el cliente'}
+                      </p>
+                      {p.fechaDevolucion && <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>Fecha: {new Date(p.fechaDevolucion).toLocaleDateString()}</p>}
+                    </div>
+                  )}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}>
-                  <div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div>
-                  <div><p style={{ color: '#6b7280' }}>Tipo</p><p style={{ fontWeight: '600' }}>{p.tipo}</p></div>
-                  <div><p style={{ color: '#6b7280' }}>Talla</p><p style={{ fontWeight: '600' }}>{p.talla}</p></div>
-                  <div><p style={{ color: '#6b7280' }}>Compra</p><p style={{ fontWeight: '600' }}>{p.precioCompra.toFixed(2)} €</p></div>
-                  <div><p style={{ color: '#6b7280' }}>Venta</p><p style={{ fontWeight: '600', color: '#10b981' }}>{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div>
-                  {p.destacada && p.costeDestacado > 0 && <div><p style={{ color: '#6b7280' }}>Coste Destacado</p><p style={{ fontWeight: '600', color: '#f59e0b' }}>{p.costeDestacado.toFixed(2)} €</p></div>}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {esDevuelta ? (
+                    <button 
+                      onClick={() => {
+                        if (window.confirm('¿Reingresar esta prenda al inventario? Se le asignará un nuevo SKU y se reiniciará su estado.')) {
+                          const nuevoSKU = `QS-${(data.prendas.length + 1).toString().padStart(4, '0')}`;
+                          const prendaReingresada = {
+                            ...p,
+                            sku: nuevoSKU,
+                            estado: 'comprada',
+                            fechaSubida: null,
+                            fechaVentaPendiente: null,
+                            fechaVentaConfirmada: null,
+                            precioVentaReal: 0,
+                            devuelta: false,
+                            tipoDevolucion: null,
+                            fechaDevolucion: null,
+                            destacada: false,
+                            resubida: false,
+                            destacadaDespuesResubida: false,
+                            costeDestacado: 0,
+                            costeDestacadoDespuesResubida: 0,
+                            fechaGastoDestacado: null,
+                            fechaGastoDestacadoDespuesResubida: null,
+                            createdAt: Date.now()
+                          };
+                          setData({ ...data, prendas: data.prendas.map(pr => pr.id === p.id ? prendaReingresada : pr) });
+                        }
+                      }}
+                      style={{ 
+                        padding: '0.75rem', 
+                        color: 'white', 
+                        background: '#10b981', 
+                        border: 'none', 
+                        cursor: 'pointer',
+                        borderRadius: '0.5rem',
+                        fontWeight: '600',
+                        fontSize: '0.875rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <RefreshCw size={16} />
+                      Reingresar
+                    </button>
+                  ) : !esVendida ? (
+                    <button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      <Edit2 size={18} />
+                    </button>
+                  ) : (
+                    <div style={{ padding: '0.5rem', color: '#9ca3af', fontSize: '0.75rem', textAlign: 'center' }}>
+                      No editable
+                    </div>
+                  )}
+                  {!esVendida && !esDevuelta && (
+                    <button onClick={() => { if (window.confirm('¿Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                      <Trash2 size={18} />
+                    </button>
+                  )}
                 </div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button>
-                <button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button>
               </div>
             </div>
-          </div>
-        ))
+          );
+        })
       )}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}>
