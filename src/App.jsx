@@ -61,9 +61,12 @@ const LotesManager = ({ data, setData }) => {
     cantidad: '', 
     costeTotal: '', 
     prendasInutiles: '0',
+    tiposPrendas: [],
     formaPago: 'unico', 
     mesesPago: '1' 
   });
+
+  const tiposDisponibles = ['Camiseta', 'Camisa', 'Pantalon', 'Vestido', 'Chaqueta', 'Sudadera', 'Jersey', 'Zapatos', 'Vaqueros', 'Otro'];
 
   const generarCodigoLote = (proveedor, fecha) => {
     const prov = proveedor.slice(0, 3).toUpperCase();
@@ -71,9 +74,21 @@ const LotesManager = ({ data, setData }) => {
     return `${prov}-${dia}${mes}${anio.slice(2)}`;
   };
 
+  const handleTipoToggle = (tipo) => {
+    if (formData.tiposPrendas.includes(tipo)) {
+      setFormData({ ...formData, tiposPrendas: formData.tiposPrendas.filter(t => t !== tipo) });
+    } else {
+      setFormData({ ...formData, tiposPrendas: [...formData.tiposPrendas, tipo] });
+    }
+  };
+
   const handleSubmit = () => {
     if (!formData.proveedor || !formData.cantidad || !formData.costeTotal) {
       alert('Completa todos los campos');
+      return;
+    }
+    if (formData.tiposPrendas.length === 0) {
+      alert('Selecciona al menos un tipo de prenda');
       return;
     }
     const costeUnitario = parseFloat(formData.costeTotal) / parseInt(formData.cantidad);
@@ -87,6 +102,7 @@ const LotesManager = ({ data, setData }) => {
       costeTotal: parseFloat(formData.costeTotal),
       costeUnitario, 
       prendasInutiles: parseInt(formData.prendasInutiles),
+      tiposPrendas: formData.tiposPrendas,
       formaPago: formData.formaPago,
       mesesPago: parseInt(formData.mesesPago)
     };
@@ -97,7 +113,7 @@ const LotesManager = ({ data, setData }) => {
     }
     setShowModal(false);
     setEditingLote(null);
-    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasInutiles: '0', formaPago: 'unico', mesesPago: '1' });
+    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasInutiles: '0', tiposPrendas: [], formaPago: 'unico', mesesPago: '1' });
   };
 
   return (
@@ -119,16 +135,19 @@ const LotesManager = ({ data, setData }) => {
           <div key={lote.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
                   <span style={{ padding: '0.25rem 0.75rem', background: '#dbeafe', color: '#1e40af', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{lote.codigo}</span>
                   <span style={{ color: '#6b7280' }}>{lote.proveedor}</span>
+                  {lote.tiposPrendas && lote.tiposPrendas.map(tipo => (
+                    <span key={tipo} style={{ padding: '0.25rem 0.5rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '0.5rem', fontSize: '0.75rem' }}>{tipo}</span>
+                  ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Fecha</p><p style={{ fontWeight: '600' }}>{new Date(lote.fecha).toLocaleDateString()}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Unitario</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Inútiles (desechables)</p><p style={{ fontWeight: '600' }}>{lote.prendasInutiles || 0}</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Inútiles</p><p style={{ fontWeight: '600' }}>{lote.prendasInutiles || 0}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Forma de Pago</p><p style={{ fontWeight: '600' }}>{lote.mesesPago === 1 ? 'Pago único' : `${lote.mesesPago} meses`}</p></div>
                 </div>
               </div>
@@ -141,6 +160,7 @@ const LotesManager = ({ data, setData }) => {
                     cantidad: lote.cantidad.toString(), 
                     costeTotal: lote.costeTotal.toString(), 
                     prendasInutiles: (lote.prendasInutiles || 0).toString(),
+                    tiposPrendas: lote.tiposPrendas || [],
                     formaPago: lote.mesesPago === 1 ? 'unico' : 'plazos', 
                     mesesPago: lote.mesesPago?.toString() || '1' 
                   }); 
@@ -160,7 +180,7 @@ const LotesManager = ({ data, setData }) => {
       )}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}>
-          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '28rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '32rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingLote ? 'Editar' : 'Nuevo'} Lote</h3>
               <button onClick={() => { setShowModal(false); setEditingLote(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -173,6 +193,20 @@ const LotesManager = ({ data, setData }) => {
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Cantidad</label><input type="number" value={formData.cantidad} onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Total</label><input type="number" step="0.01" value={formData.costeTotal} onChange={(e) => setFormData({ ...formData, costeTotal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Prendas Inútiles (desechables)</label><input type="number" value={formData.prendasInutiles} onChange={(e) => setFormData({ ...formData, prendasInutiles: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Tipos de prendas en el lote</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                  {tiposDisponibles.map(tipo => (
+                    <div key={tipo} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: formData.tiposPrendas.includes(tipo) ? '#eff6ff' : '#f9fafb', borderRadius: '0.5rem', cursor: 'pointer', border: formData.tiposPrendas.includes(tipo) ? '2px solid #2563eb' : '2px solid transparent' }} onClick={() => handleTipoToggle(tipo)}>
+                      <input type="checkbox" checked={formData.tiposPrendas.includes(tipo)} onChange={() => handleTipoToggle(tipo)} style={{ cursor: 'pointer' }} />
+                      <span style={{ fontSize: '0.875rem', color: formData.tiposPrendas.includes(tipo) ? '#1e40af' : '#6b7280' }}>{tipo}</span>
+                    </div>
+                  ))}
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>Seleccionados: {formData.tiposPrendas.length > 0 ? formData.tiposPrendas.join(', ') : 'Ninguno'}</p>
+              </div>
+
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Forma de Pago</label><select value={formData.formaPago} onChange={(e) => { setFormData({ ...formData, formaPago: e.target.value, mesesPago: e.target.value === 'unico' ? '1' : formData.mesesPago }); }} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="unico">Pago único</option><option value="plazos">A plazos</option></select></div>
               {formData.formaPago === 'plazos' && (
                 <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Número de Meses</label><select value={formData.mesesPago} onChange={(e) => setFormData({ ...formData, mesesPago: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="2">2 meses</option><option value="3">3 meses</option><option value="4">4 meses</option><option value="5">5 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></div>
@@ -195,7 +229,6 @@ const InventarioManager = ({ data, setData }) => {
   const [filtro, setFiltro] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
   const [formData, setFormData] = useState({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '', lavada: false });
-  const tipos = ['Camiseta', 'Camisa', 'Pantalon', 'Vestido', 'Chaqueta', 'Sudadera', 'Jersey', 'Zapatos', 'Otro'];
 
   const resetForm = () => {
     setFormData({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '', lavada: false });
@@ -266,7 +299,7 @@ const InventarioManager = ({ data, setData }) => {
         </div>
       </div>
       {prendas.length === 0 ? (<div style={{ background: 'white', borderRadius: '0.5rem', padding: '3rem', textAlign: 'center' }}><Package size={48} style={{ margin: '0 auto 1rem', color: '#9ca3af' }} /><p style={{ color: '#6b7280' }}>No hay prendas</p></div>) : (prendas.map(p => (<div key={p.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><div style={{ flex: 1 }}><div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}><span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span><span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: p.estado === 'comprada' ? '#f3f4f6' : p.estado === 'subida' ? '#dbeafe' : p.estado === 'vendida-pendiente' ? '#fef3c7' : '#d1fae5', color: p.estado === 'comprada' ? '#1f2937' : p.estado === 'subida' ? '#1e40af' : p.estado === 'vendida-pendiente' ? '#92400e' : '#065f46' }}>{p.estado}</span>{p.lavada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af' }}>Lavada</span>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}><div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div><div><p style={{ color: '#6b7280' }}>Tipo</p><p style={{ fontWeight: '600' }}>{p.tipo}</p></div><div><p style={{ color: '#6b7280' }}>Talla</p><p style={{ fontWeight: '600' }}>{p.talla}</p></div><div><p style={{ color: '#6b7280' }}>Compra</p><p style={{ fontWeight: '600' }}>{p.precioCompra.toFixed(2)} €</p></div><div><p style={{ color: '#6b7280' }}>Venta</p><p style={{ fontWeight: '600', color: '#10b981' }}>{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div></div></div><div style={{ display: 'flex', gap: '0.5rem' }}><button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button><button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button></div></div></div>)))}
-      {showModal && (<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}><div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '48rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingPrenda ? `Editar Prenda (${editingPrenda.sku})` : 'Nueva Prenda'}</h3><button onClick={() => { setShowModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button></div><div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Lote</label><select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={editingPrenda}><option value="">Selecciona</option>{data.lotes.map(l => <option key={l.id} value={l.id}>{l.codigo}</option>)}</select></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Tipo</label><select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="">Selecciona</option>{tipos.map(t => <option key={t} value={t}>{t}</option>)}</select></div></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Talla</label><input type="text" value={formData.talla} onChange={(e) => setFormData({ ...formData, talla: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="M, L, 42..." /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Objetivo</label><input type="number" step="0.01" value={formData.precioObjetivo} onChange={(e) => setFormData({ ...formData, precioObjetivo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="20.00" /></div></div><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem' }}><input type="checkbox" id="lavada" checked={formData.lavada} onChange={(e) => setFormData({ ...formData, lavada: e.target.checked })} style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} /><label htmlFor="lavada" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>¿Prenda lavada? (se añadirá coste de {data.config.costeLavado}€)</label></div><div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}><h4 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Estado de la prenda</h4><div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Subida</label><input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Venta Pendiente</label><input type="date" value={formData.fechaVentaPendiente} onChange={(e) => setFormData({ ...formData, fechaVentaPendiente: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Venta Real</label><input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="18.50" /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Confirmada</label><input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div></div></div></div></div><div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}><button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button><button onClick={handleSubmit} style={{ flex: 1, padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>{editingPrenda ? 'Guardar' : 'Crear'}</button></div></div></div>)}
+      {showModal && (<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}><div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '48rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingPrenda ? `Editar Prenda (${editingPrenda.sku})` : 'Nueva Prenda'}</h3><button onClick={() => { setShowModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button></div><div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Lote</label><select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value, tipo: '' })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={editingPrenda}><option value="">Selecciona</option>{data.lotes.map(l => <option key={l.id} value={l.id}>{l.codigo}</option>)}</select></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Tipo</label><select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={!formData.loteId}><option value="">Selecciona</option>{formData.loteId && data.lotes.find(l => l.id === formData.loteId)?.tiposPrendas?.map(t => <option key={t} value={t}>{t}</option>)}</select></div></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Talla</label><input type="text" value={formData.talla} onChange={(e) => setFormData({ ...formData, talla: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="M, L, 42..." /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Objetivo</label><input type="number" step="0.01" value={formData.precioObjetivo} onChange={(e) => setFormData({ ...formData, precioObjetivo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="20.00" /></div></div><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem' }}><input type="checkbox" id="lavada" checked={formData.lavada} onChange={(e) => setFormData({ ...formData, lavada: e.target.checked })} style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} /><label htmlFor="lavada" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>¿Prenda lavada? (se añadirá coste de {data.config.costeLavado}€)</label></div><div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}><h4 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Estado de la prenda</h4><div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Subida</label><input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Venta Pendiente</label><input type="date" value={formData.fechaVentaPendiente} onChange={(e) => setFormData({ ...formData, fechaVentaPendiente: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Venta Real</label><input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="18.50" /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Confirmada</label><input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div></div></div></div></div><div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}><button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button><button onClick={handleSubmit} style={{ flex: 1, padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>{editingPrenda ? 'Guardar' : 'Crear'}</button></div></div></div>)}
     </div>
   );
 };
