@@ -415,7 +415,8 @@ const InventarioManager = ({ data, setData }) => {
     fechaGastoDestacadoDespuesResubida: '',
     devuelta: false,
     tipoDevolucion: '',
-    fechaDevolucion: ''
+    fechaDevolucion: '',
+    costeEnvioDevolucion: ''  // NUEVO
   });
 
   const resetForm = () => {
@@ -438,7 +439,8 @@ const InventarioManager = ({ data, setData }) => {
       fechaGastoDestacadoDespuesResubida: '',
       devuelta: false,
       tipoDevolucion: '',
-      fechaDevolucion: ''
+      fechaDevolucion: '',
+      costeEnvioDevolucion: ''  // NUEVO
     });
     setEditingPrenda(null);
   };
@@ -464,7 +466,8 @@ const InventarioManager = ({ data, setData }) => {
       fechaGastoDestacadoDespuesResubida: prenda.fechaGastoDestacadoDespuesResubida || '',
       devuelta: prenda.devuelta || false,
       tipoDevolucion: prenda.tipoDevolucion || '',
-      fechaDevolucion: prenda.fechaDevolucion || ''
+      fechaDevolucion: prenda.fechaDevolucion || '',
+      costeEnvioDevolucion: (prenda.costeEnvioDevolucion || '').toString()  // NUEVO
     });
     setShowModal(true);
   };
@@ -485,9 +488,19 @@ const InventarioManager = ({ data, setData }) => {
       return;
     }
     
-    if (formData.devuelta && !formData.tipoDevolucion) {
-      alert('Debes seleccionar el tipo de devolución');
-      return;
+    if (formData.devuelta) {
+      if (!formData.tipoDevolucion) {
+        alert('Debes seleccionar el tipo de devolución');
+        return;
+      }
+      if (!formData.fechaDevolucion) {
+        alert('Debes indicar la fecha de devolución');
+        return;
+      }
+      if (formData.tipoDevolucion === 'gastos-nosotros' && !formData.costeEnvioDevolucion) {
+        alert('Debes indicar el coste del envío de devolución');
+        return;
+      }
     }
     
     const lote = data.lotes.find(l => l.id === formData.loteId);
@@ -532,6 +545,7 @@ const InventarioManager = ({ data, setData }) => {
       devuelta: formData.devuelta || false,
       tipoDevolucion: formData.devuelta ? formData.tipoDevolucion : null,
       fechaDevolucion: formData.devuelta ? formData.fechaDevolucion : null,
+      costeEnvioDevolucion: (formData.devuelta && formData.tipoDevolucion === 'gastos-nosotros') ? parseFloat(formData.costeEnvioDevolucion) || 0 : 0,  // NUEVO
       createdAt: editingPrenda?.createdAt || Date.now()
     };
     
@@ -666,7 +680,7 @@ const InventarioManager = ({ data, setData }) => {
                   )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {esDevuelta ? (
+                  {esDevuelta && p.tipoDevolucion !== 'prenda-dinero-cliente' ? (
                     <button 
                       onClick={() => {
                         if (window.confirm('¿Reingresar esta prenda al inventario? Se le asignará un nuevo SKU y se reiniciará su estado.')) {
@@ -682,6 +696,7 @@ const InventarioManager = ({ data, setData }) => {
                             devuelta: false,
                             tipoDevolucion: null,
                             fechaDevolucion: null,
+                            costeEnvioDevolucion: 0,
                             destacada: false,
                             resubida: false,
                             destacadaDespuesResubida: false,
@@ -711,7 +726,12 @@ const InventarioManager = ({ data, setData }) => {
                       <RefreshCw size={16} />
                       Reingresar
                     </button>
+                  ) : esDevuelta && p.tipoDevolucion === 'prenda-dinero-cliente' ? (
+                    <div style={{ padding: '0.5rem', color: '#dc2626', fontSize: '0.75rem', textAlign: 'center', fontWeight: '600' }}>
+                      No reingresable
+                    </div>
                   ) : !esVendida ? (
+                    // ... resto del código de botones de editar/eliminar
                     <button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}>
                       <Edit2 size={18} />
                     </button>
