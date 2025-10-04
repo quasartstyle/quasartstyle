@@ -1699,6 +1699,295 @@ function App() {
                 </div>
               </div>
             </div>
+            {/* GRÁFICOS Y VISUALIZACIONES */}
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>📊 Visualización de Datos</h3>
+              
+              {(() => {
+                // Calcular datos para gráficos
+                const prendasVendidasMes = data.prendas.filter(p => {
+                  const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
+                  return fechaVenta && fechaVenta.startsWith(selectedMonth);
+                });
+                
+                // Distribución por tipo de prenda vendida
+                const distribucionTipos = {};
+                prendasVendidasMes.forEach(p => {
+                  distribucionTipos[p.tipo] = (distribucionTipos[p.tipo] || 0) + 1;
+                });
+                const tiposOrdenados = Object.entries(distribucionTipos).sort((a, b) => b[1] - a[1]);
+                const coloresTipos = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+                
+                // Estados del inventario actual
+                const estadosInventario = {
+                  'comprada': data.prendas.filter(p => p.estado === 'comprada').length,
+                  'subida': data.prendas.filter(p => p.estado === 'subida').length,
+                  'vendida-pendiente': data.prendas.filter(p => p.estado === 'vendida-pendiente').length,
+                  'vendida-confirmada': data.prendas.filter(p => p.estado === 'vendida-confirmada').length,
+                  'devuelta': data.prendas.filter(p => p.estado === 'devuelta').length
+                };
+                const totalPrendas = Object.values(estadosInventario).reduce((a, b) => a + b, 0);
+                
+                // Desglose de gastos
+                const totalGastos = currentMetrics.totalGastos;
+                const desgaseGastos = [
+                  { nombre: 'Lotes', valor: currentMetrics.gastosLotes, color: '#3b82f6' },
+                  { nombre: 'Envío', valor: currentMetrics.gastosEnvio, color: '#10b981' },
+                  { nombre: 'Lavado', valor: currentMetrics.gastosLavado, color: '#f59e0b' },
+                  { nombre: 'Destacados', valor: currentMetrics.gastosDestacados, color: '#ef4444' },
+                  { nombre: 'Manuales', valor: currentMetrics.totalGastosManuales, color: '#8b5cf6' }
+                ].filter(g => g.valor > 0);
+                
+                // Rendimiento de ventas (objetivo vs real)
+                const vendidasConObjetivo = prendasVendidasMes.filter(p => p.precioObjetivo > 0);
+                const ventasAlObjetivo = vendidasConObjetivo.filter(p => p.precioVentaReal >= p.precioObjetivo).length;
+                const ventasBajoObjetivo = vendidasConObjetivo.filter(p => p.precioVentaReal < p.precioObjetivo).length;
+                
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                    
+                    {/* Gráfico circular: Estados del inventario */}
+                    <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>Estado del Inventario Total</h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                        <div style={{ position: 'relative', width: '150px', height: '150px' }}>
+                          <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                            {(() => {
+                              let offset = 0;
+                              const coloresEstados = {
+                                'comprada': '#9ca3af',
+                                'subida': '#3b82f6',
+                                'vendida-pendiente': '#f59e0b',
+                                'vendida-confirmada': '#10b981',
+                                'devuelta': '#ef4444'
+                              };
+                              return Object.entries(estadosInventario).map(([estado, cantidad]) => {
+                                const porcentaje = totalPrendas > 0 ? (cantidad / totalPrendas) * 100 : 0;
+                                const circumference = 2 * Math.PI * 40;
+                                const dasharray = `${(porcentaje / 100) * circumference} ${circumference}`;
+                                const dashoffset = -offset * circumference / 100;
+                                offset += porcentaje;
+                                return cantidad > 0 ? (
+                                  <circle
+                                    key={estado}
+                                    cx="50"
+                                    cy="50"
+                                    r="40"
+                                    fill="none"
+                                    stroke={coloresEstados[estado]}
+                                    strokeWidth="20"
+                                    strokeDasharray={dasharray}
+                                    strokeDashoffset={dashoffset}
+                                  />
+                                ) : null;
+                              });
+                            })()}
+                          </svg>
+                          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{totalPrendas}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total</div>
+                          </div>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          {Object.entries(estadosInventario).map(([estado, cantidad]) => {
+                            const coloresEstados = {
+                              'comprada': { color: '#9ca3af', nombre: 'Compradas' },
+                              'subida': { color: '#3b82f6', nombre: 'En Vinted' },
+                              'vendida-pendiente': { color: '#f59e0b', nombre: 'Pendientes' },
+                              'vendida-confirmada': { color: '#10b981', nombre: 'Vendidas' },
+                              'devuelta': { color: '#ef4444', nombre: 'Devueltas' }
+                            };
+                            const porcentaje = totalPrendas > 0 ? ((cantidad / totalPrendas) * 100).toFixed(1) : 0;
+                            return (
+                              <div key={estado} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: coloresEstados[estado].color }}></div>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280', flex: 1 }}>{coloresEstados[estado].nombre}</span>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>{cantidad}</span>
+                                <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>({porcentaje}%)</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+            
+                    {/* Distribución de ventas por tipo */}
+                    {tiposOrdenados.length > 0 && (
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>Ventas por Tipo de Prenda</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          {tiposOrdenados.map(([tipo, cantidad], idx) => {
+                            const porcentaje = (cantidad / prendasVendidasMes.length) * 100;
+                            return (
+                              <div key={tipo}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                  <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#1f2937' }}>{tipo}</span>
+                                  <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>{cantidad} ({porcentaje.toFixed(1)}%)</span>
+                                </div>
+                                <div style={{ width: '100%', height: '8px', background: '#e5e7eb', borderRadius: '1rem', overflow: 'hidden' }}>
+                                  <div style={{ width: `${porcentaje}%`, height: '100%', background: coloresTipos[idx % coloresTipos.length], borderRadius: '1rem', transition: 'width 0.3s' }}></div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+            
+                    {/* Desglose de gastos */}
+                    {desgaseGastos.length > 0 && (
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>Composición de Gastos</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                          <div style={{ position: 'relative', width: '150px', height: '150px' }}>
+                            <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                              {(() => {
+                                let offset = 0;
+                                return desgaseGastos.map((gasto) => {
+                                  const porcentaje = totalGastos > 0 ? (gasto.valor / totalGastos) * 100 : 0;
+                                  const circumference = 2 * Math.PI * 40;
+                                  const dasharray = `${(porcentaje / 100) * circumference} ${circumference}`;
+                                  const dashoffset = -offset * circumference / 100;
+                                  offset += porcentaje;
+                                  return (
+                                    <circle
+                                      key={gasto.nombre}
+                                      cx="50"
+                                      cy="50"
+                                      r="40"
+                                      fill="none"
+                                      stroke={gasto.color}
+                                      strokeWidth="20"
+                                      strokeDasharray={dasharray}
+                                      strokeDashoffset={dashoffset}
+                                    />
+                                  );
+                                });
+                              })()}
+                            </svg>
+                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                              <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937' }}>{totalGastos.toFixed(0)}€</div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total</div>
+                            </div>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            {desgaseGastos.map((gasto) => {
+                              const porcentaje = totalGastos > 0 ? ((gasto.valor / totalGastos) * 100).toFixed(1) : 0;
+                              return (
+                                <div key={gasto.nombre} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: gasto.color }}></div>
+                                  <span style={{ fontSize: '0.875rem', color: '#6b7280', flex: 1 }}>{gasto.nombre}</span>
+                                  <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>{gasto.valor.toFixed(2)}€</span>
+                                  <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>({porcentaje}%)</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+            
+                    {/* Rendimiento: Objetivo vs Real */}
+                    {vendidasConObjetivo.length > 0 && (
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>Cumplimiento de Objetivos</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                          <div style={{ position: 'relative', width: '150px', height: '150px' }}>
+                            <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
+                              {(() => {
+                                const porcObjetivo = (ventasAlObjetivo / vendidasConObjetivo.length) * 100;
+                                const circumference = 2 * Math.PI * 40;
+                                const dasharray = `${(porcObjetivo / 100) * circumference} ${circumference}`;
+                                return (
+                                  <>
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="20" />
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="20" strokeDasharray={dasharray} />
+                                  </>
+                                );
+                              })()}
+                            </svg>
+                            <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center' }}>
+                              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
+                                {((ventasAlObjetivo / vendidasConObjetivo.length) * 100).toFixed(0)}%
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Objetivo</div>
+                            </div>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ marginBottom: '1rem' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#10b981', fontWeight: '600' }}>Al objetivo o superior</span>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>{ventasAlObjetivo}</span>
+                              </div>
+                              <div style={{ width: '100%', height: '8px', background: '#e5e7eb', borderRadius: '1rem', overflow: 'hidden' }}>
+                                <div style={{ width: `${(ventasAlObjetivo / vendidasConObjetivo.length) * 100}%`, height: '100%', background: '#10b981', borderRadius: '1rem' }}></div>
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                <span style={{ fontSize: '0.875rem', color: '#ef4444', fontWeight: '600' }}>Por debajo del objetivo</span>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937' }}>{ventasBajoObjetivo}</span>
+                              </div>
+                              <div style={{ width: '100%', height: '8px', background: '#e5e7eb', borderRadius: '1rem', overflow: 'hidden' }}>
+                                <div style={{ width: `${(ventasBajoObjetivo / vendidasConObjetivo.length) * 100}%`, height: '100%', background: '#ef4444', borderRadius: '1rem' }}></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+            
+                    {/* Ratio Ingresos vs Gastos */}
+                    <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>Balance Financiero</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#10b981' }}>Ingresos</span>
+                            <span style={{ fontSize: '1rem', fontWeight: '700', color: '#10b981' }}>{currentMetrics.totalVentas.toFixed(2)}€</span>
+                          </div>
+                          <div style={{ width: '100%', height: '20px', background: '#e5e7eb', borderRadius: '1rem', overflow: 'hidden' }}>
+                            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to right, #10b981, #059669)', borderRadius: '1rem' }}></div>
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#ef4444' }}>Gastos</span>
+                            <span style={{ fontSize: '1rem', fontWeight: '700', color: '#ef4444' }}>{currentMetrics.totalGastos.toFixed(2)}€</span>
+                          </div>
+                          <div style={{ width: '100%', height: '20px', background: '#e5e7eb', borderRadius: '1rem', overflow: 'hidden' }}>
+                            <div style={{ 
+                              width: currentMetrics.totalVentas > 0 ? `${(currentMetrics.totalGastos / currentMetrics.totalVentas) * 100}%` : '0%', 
+                              height: '100%', 
+                              background: 'linear-gradient(to right, #ef4444, #dc2626)', 
+                              borderRadius: '1rem' 
+                            }}></div>
+                          </div>
+                        </div>
+                        <div style={{ 
+                          padding: '1rem', 
+                          background: currentMetrics.beneficioNeto >= 0 ? '#d1fae5' : '#fee2e2', 
+                          borderRadius: '0.5rem',
+                          textAlign: 'center'
+                        }}>
+                          <div style={{ fontSize: '0.75rem', color: currentMetrics.beneficioNeto >= 0 ? '#065f46' : '#991b1b', marginBottom: '0.25rem' }}>
+                            Beneficio Neto
+                          </div>
+                          <div style={{ 
+                            fontSize: '2rem', 
+                            fontWeight: 'bold', 
+                            color: currentMetrics.beneficioNeto >= 0 ? '#10b981' : '#ef4444' 
+                          }}>
+                            {currentMetrics.beneficioNeto >= 0 ? '+' : ''}{currentMetrics.beneficioNeto.toFixed(2)}€
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+            
+                  </div>
+                );
+              })()}
+            </div>            
           </div>
         )}
         {currentView === 'lotes' && <LotesManager data={data} setData={saveData} />}
