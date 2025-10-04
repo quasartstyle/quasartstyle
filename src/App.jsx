@@ -544,30 +544,30 @@ const InventarioManager = ({ data, setData }) => {
     resetForm();
   };
 
-  const prendasOrdenadas = [...prendas].sort((a, b) => {
-    if (ordenamiento === 'recientes') {
-      return (b.createdAt || 0) - (a.createdAt || 0);
-    } else {
-      return (a.createdAt || 0) - (b.createdAt || 0);
-    }
-  });
-
-  const getEstadoColor = (estado) => {
-    const colores = {
-      'comprada': { bg: '#f3f4f6', text: '#1f2937' },
-      'subida': { bg: '#dbeafe', text: '#1e40af' },
-      'vendida-pendiente': { bg: '#fef3c7', text: '#92400e' },
-      'vendida-confirmada': { bg: '#d1fae5', text: '#065f46' },
-      'devuelta': { bg: '#fee2e2', text: '#991b1b' }
-    };
-    return colores[estado] || colores['comprada'];
-  };
-
   const prendas = data.prendas.filter(p => {
     const matchFiltro = filtro === 'todos' || p.estado === filtro;
     const matchBusqueda = p.sku.toLowerCase().includes(busqueda.toLowerCase()) || p.tipo.toLowerCase().includes(busqueda.toLowerCase());
     return matchFiltro && matchBusqueda;
   });
+
+    const prendasOrdenadas = [...prendas].sort((a, b) => {
+      if (ordenamiento === 'recientes') {
+        return (b.createdAt || 0) - (a.createdAt || 0);
+      } else {
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      }
+    });
+  
+    const getEstadoColor = (estado) => {
+      const colores = {
+        'comprada': { bg: '#f3f4f6', text: '#1f2937' },
+        'subida': { bg: '#dbeafe', text: '#1e40af' },
+        'vendida-pendiente': { bg: '#fef3c7', text: '#92400e' },
+        'vendida-confirmada': { bg: '#d1fae5', text: '#065f46' },
+        'devuelta': { bg: '#fee2e2', text: '#991b1b' }
+      };
+      return colores[estado] || colores['comprada'];
+    };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -578,7 +578,17 @@ const InventarioManager = ({ data, setData }) => {
       <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1rem' }}>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <div style={{ flex: 1, position: 'relative' }}><Search style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} size={20} /><input type="text" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por SKU o tipo..." style={{ width: '100%', paddingLeft: '2.5rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-          <select value={filtro} onChange={(e) => setFiltro(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="todos">Todos</option><option value="comprada">Compradas</option><option value="subida">En Vinted</option><option value="vendida-pendiente">Pendientes</option><option value="vendida-confirmada">Vendidas</option></select>
+          <select value={filtro} onChange={(e) => setFiltro(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}>
+            <option value="todos">Todos</option>
+            <option value="subida">En Vinted</option>
+            <option value="vendida-pendiente">Pendientes</option>
+            <option value="vendida-confirmada">Vendidas</option>
+            <option value="devuelta">Devueltas</option>
+          </select>
+          <select value={ordenamiento} onChange={(e) => setOrdenamiento(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}>
+            <option value="recientes">Más recientes</option>
+            <option value="antiguas">Más antiguas</option>
+          </select>
         </div>
       </div>
       {prendas.length === 0 ? (
