@@ -631,7 +631,7 @@ const InventarioManager = ({ data, setData }) => {
                       {p.estado === 'vendida-pendiente' && '⏳ PENDIENTE'}
                       {p.estado === 'devuelta' && '↩ DEVUELTA'}
                       {p.estado === 'subida' && '📤 EN VINTED'}
-                      {p.estado === 'comprada' && '📦 COMPRADA'}
+                      {p.estado === 'comprada' && '↩📤 DEVUELTA Y RESUBIDA'}
                     </span>
                     {esVendida && (
                       <span style={{ padding: '0.25rem 0.75rem', background: '#d1fae5', color: '#065f46', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '600' }}>
