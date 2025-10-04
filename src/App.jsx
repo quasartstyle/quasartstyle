@@ -2035,90 +2035,55 @@ function App() {
                     
                     {/* Gráfica de 12 meses */}
                     <div style={{ background: '#f9fafb', borderRadius: '0.75rem', padding: '1.5rem' }}>
-                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1f2937' }}>📊 Beneficio Neto por Mes ({anoActual})</h4>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', height: '300px', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
+                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1f2937' }}>📊 Evolución Últimos 12 Meses</h4>
+                      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', height: '280px', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
                         {mesesGrafica.map((mes, idx) => {
-                          const altura = maxBeneficio > 0 ? Math.abs(mes.beneficio / maxBeneficio) * 200 : 0;
-                          const esPositivo = mes.beneficio >= 0;
+                          const maxValor = Math.max(...mesesGrafica.flatMap(m => [m.ingresos, m.gastos, m.beneficio > 0 ? m.beneficio : 0]), 100);
+                          const escala = maxValor > 0 ? 250 / maxValor : 1;
                           
                           return (
                             <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                              <div style={{ 
-                                display: 'flex', 
-                                flexDirection: 'column', 
-                                alignItems: 'center', 
-                                justifyContent: esPositivo ? 'flex-end' : 'flex-start',
-                                height: '220px'
-                              }}>
-                                {esPositivo ? (
+                              <div style={{ display: 'flex', gap: '3px', alignItems: 'flex-end', height: '250px' }}>
+                                {mes.ingresos > 0 && (
                                   <div 
                                     style={{ 
-                                      width: '100%',
-                                      maxWidth: '50px',
-                                      height: `${altura}px`, 
-                                      background: 'linear-gradient(to top, #10b981, #059669)', 
+                                      width: '24px', 
+                                      height: `${mes.ingresos * escala}px`, 
+                                      background: '#10b981', 
                                       borderRadius: '4px 4px 0 0',
                                       transition: 'height 0.3s',
-                                      cursor: 'pointer',
-                                      position: 'relative'
+                                      cursor: 'pointer'
                                     }}
-                                    title={`${mes.mes}: ${mes.beneficio.toFixed(2)}€`}
-                                  >
-                                    <div style={{ 
-                                      position: 'absolute', 
-                                      top: '-25px', 
-                                      left: '50%', 
-                                      transform: 'translateX(-50%)',
-                                      fontSize: '0.75rem',
-                                      fontWeight: 'bold',
-                                      color: '#10b981',
-                                      whiteSpace: 'nowrap'
-                                    }}>
-                                      {mes.beneficio > 0 ? `+${mes.beneficio.toFixed(0)}` : ''}
-                                    </div>
-                                  </div>
-                                ) : (
+                                    title={`Ingresos: ${mes.ingresos.toFixed(2)}€`}
+                                  />
+                                )}
+                                {mes.gastos > 0 && (
                                   <div 
                                     style={{ 
-                                      width: '100%',
-                                      maxWidth: '50px',
-                                      height: `${altura}px`, 
-                                      background: 'linear-gradient(to bottom, #ef4444, #dc2626)', 
-                                      borderRadius: '0 0 4px 4px',
+                                      width: '24px', 
+                                      height: `${mes.gastos * escala}px`, 
+                                      background: '#ef4444', 
+                                      borderRadius: '4px 4px 0 0',
                                       transition: 'height 0.3s',
-                                      cursor: 'pointer',
-                                      position: 'relative'
+                                      cursor: 'pointer'
                                     }}
-                                    title={`${mes.mes}: ${mes.beneficio.toFixed(2)}€`}
-                                  >
-                                    <div style={{ 
-                                      position: 'absolute', 
-                                      bottom: '-25px', 
-                                      left: '50%', 
-                                      transform: 'translateX(-50%)',
-                                      fontSize: '0.75rem',
-                                      fontWeight: 'bold',
-                                      color: '#ef4444',
-                                      whiteSpace: 'nowrap'
-                                    }}>
-                                      {mes.beneficio < 0 ? mes.beneficio.toFixed(0) : ''}
-                                    </div>
-                                  </div>
+                                    title={`Gastos: ${mes.gastos.toFixed(2)}€`}
+                                  />
                                 )}
                               </div>
-                              <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600' }}>{mes.mes}</span>
+                              <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600', textTransform: 'uppercase' }}>{mes.mes}</span>
                             </div>
                           );
                         })}
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '2.5rem', marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{ width: '20px', height: '14px', background: '#10b981', borderRadius: '3px' }}></div>
-                          <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Beneficio</span>
+                          <div style={{ width: '24px', height: '14px', background: '#10b981', borderRadius: '3px' }}></div>
+                          <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Ingresos</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{ width: '20px', height: '14px', background: '#ef4444', borderRadius: '3px' }}></div>
-                          <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Pérdida</span>
+                          <div style={{ width: '24px', height: '14px', background: '#ef4444', borderRadius: '3px' }}></div>
+                          <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Gastos</span>
                         </div>
                       </div>
                     </div>
