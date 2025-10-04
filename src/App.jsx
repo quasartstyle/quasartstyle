@@ -296,12 +296,10 @@ function App() {
   };
 
   const calculateMonthMetrics = (month) => {
-    // Prendas vendidas confirmadas
     const prendasConfirmadas = data.prendas.filter(p => 
       p.fechaVentaConfirmada && p.fechaVentaConfirmada.startsWith(month)
     );
     
-    // Prendas vendidas pendientes
     const prendasPendientes = data.prendas.filter(p => 
       p.fechaVentaPendiente && p.fechaVentaPendiente.startsWith(month) && !p.fechaVentaConfirmada
     );
@@ -309,25 +307,17 @@ function App() {
     const gastosMes = data.gastos.filter(g => g.fecha && g.fecha.startsWith(month));
     const ingresosMes = data.ingresos.filter(i => i.fecha && i.fecha.startsWith(month));
     
-    // Calcular ventas confirmadas
     const totalVentasConfirmadas = prendasConfirmadas.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
-    
-    // Calcular ventas pendientes
     const totalVentasPendientes = prendasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
-    
-    // Total ventas (confirmadas + pendientes)
     const totalVentas = totalVentasConfirmadas + totalVentasPendientes;
     
-    // Gastos manuales
     const totalGastosManuales = gastosMes.reduce((sum, g) => sum + g.cantidad, 0);
     
-    // Gastos automáticos: envío (solo confirmadas) + lavado
     const gastosEnvio = prendasConfirmadas.length * data.config.costeEnvio;
     const gastosLavado = [...prendasConfirmadas, ...prendasPendientes]
       .filter(p => p.lavada)
       .length * data.config.costeLavado;
     
-    // Gastos de lotes distribuidos según forma de pago
     const gastosLotes = data.lotes.reduce((sum, lote) => {
       if (!lote.fecha) return sum;
       
@@ -338,7 +328,6 @@ function App() {
       const mesesPago = lote.mesesPago || 1;
       const cuotaMensual = lote.costeTotal / mesesPago;
       
-      // Verificar si este mes está dentro del periodo de pago
       for (let i = 0; i < mesesPago; i++) {
         const fechaPago = new Date(fechaLote);
         fechaPago.setMonth(fechaPago.getMonth() + i);
