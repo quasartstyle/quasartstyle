@@ -58,10 +58,14 @@ const LotesManager = ({ data, setData }) => {
   const [formData, setFormData] = useState({ 
     proveedor: '', 
     fecha: new Date().toISOString().slice(0, 10), 
-    cantidad: '', 
-    costeTotal: '', 
     prendasInutiles: '0',
     tiposPrendas: [],
+    detallesPrendas: {},
+    ivaPrendas: '21',
+    gastoEnvio: '0',
+    ivaEnvio: '21',
+    descuento: '0',
+    tieneDescuento: false,
     formaPago: 'unico', 
     mesesPago: '1' 
   });
@@ -76,36 +80,95 @@ const LotesManager = ({ data, setData }) => {
 
   const handleTipoToggle = (tipo) => {
     if (formData.tiposPrendas.includes(tipo)) {
-      setFormData({ ...formData, tiposPrendas: formData.tiposPrendas.filter(t => t !== tipo) });
+      const nuevosTipos = formData.tiposPrendas.filter(t => t !== tipo);
+      const nuevosDetalles = { ...formData.detallesPrendas };
+      delete nuevosDetalles[tipo];
+      setFormData({ ...formData, tiposPrendas: nuevosTipos, detallesPrendas: nuevosDetalles });
     } else {
-      setFormData({ ...formData, tiposPrendas: [...formData.tiposPrendas, tipo] });
+      setFormData({ 
+        ...formData, 
+        tiposPrendas: [...formData.tiposPrendas, tipo],
+        detallesPrendas: { ...formData.detallesPrendas, [tipo]: { cantidad: '', precio: '' } }
+      });
     }
   };
 
+  const handleDetalleChange = (tipo, campo, valor) => {
+    setFormData({
+      ...formData,
+      detallesPrendas: {
+        ...formData.detallesPrendas,
+        [tipo]: {
+          ...formData.detallesPrendas[tipo],
+          [campo]: valor
+        }
+      }
+    });
+  };
+
+  const calcularTotales = () => {
+    const subtotalPrendas = Object.values(formData.detallesPrendas).reduce((sum, det) => {
+      return sum + (parseFloat(det.precio) || 0);
+    }, 0);
+    
+    const totalIvaPrendas = subtotalPrendas * (parseFloat(formData.ivaPrendas) / 100);
+    const totalPrendas = subtotalPrendas + totalIvaPrendas;
+    
+    const gastoEnvio = parseFloat(formData.gastoEnvio) || 0;
+    const ivaEnvio = gastoEnvio * (parseFloat(formData.ivaEnvio) / 100);
+    const totalEnvio = gastoEnvio + ivaEnvio;
+    
+    const descuento = formData.tieneDescuento ? (parseFloat(formData.descuento) || 0) : 0;
+    
+    const total = totalPrendas + totalEnvio - descuento;
+    const cantidadTotal = Object.values(formData.detallesPrendas).reduce((sum, det) => {
+      return sum + (parseInt(det.cantidad) || 0);
+    }, 0);
+    
+    return { subtotalPrendas, totalIvaPrendas, totalPrendas, gastoEnvio, ivaEnvio, totalEnvio, descuento, total, cantidadTotal };
+  };
+
   const handleSubmit = () => {
-    if (!formData.proveedor || !formData.cantidad || !formData.costeTotal) {
-      alert('Completa todos los campos');
+    if (!formData.proveedor) {
+      alert('Completa el proveedor');
       return;
     }
     if (formData.tiposPrendas.length === 0) {
       alert('Selecciona al menos un tipo de prenda');
       return;
     }
-    const costeUnitario = parseFloat(formData.costeTotal) / parseInt(formData.cantidad);
+    
+    // Validar que todos los tipos tengan cantidad y precio
+    for (const tipo of formData.tiposPrendas) {
+      const det = formData.detallesPrendas[tipo];
+      if (!det.cantidad || !det.precio) {
+        alert(`Completa cantidad y precio para ${tipo}`);
+        return;
+      }
+    }
+
+    const totales = calcularTotales();
     const codigo = generarCodigoLote(formData.proveedor, formData.fecha);
+    
     const nuevoLote = {
       id: editingLote?.id || Date.now().toString(),
       codigo, 
       proveedor: formData.proveedor, 
       fecha: formData.fecha,
-      cantidad: parseInt(formData.cantidad), 
-      costeTotal: parseFloat(formData.costeTotal),
-      costeUnitario, 
+      cantidad: totales.cantidadTotal,
+      costeTotal: totales.total,
+      costeUnitario: totales.total / totales.cantidadTotal,
       prendasInutiles: parseInt(formData.prendasInutiles),
       tiposPrendas: formData.tiposPrendas,
+      detallesPrendas: formData.detallesPrendas,
+      ivaPrendas: parseFloat(formData.ivaPrendas),
+      gastoEnvio: parseFloat(formData.gastoEnvio) || 0,
+      ivaEnvio: parseFloat(formData.ivaEnvio),
+      descuento: formData.tieneDescuento ? (parseFloat(formData.descuento) || 0) : 0,
       formaPago: formData.formaPago,
       mesesPago: parseInt(formData.mesesPago)
     };
+    
     if (editingLote) {
       setData({ ...data, lotes: data.lotes.map(l => l.id === editingLote.id ? nuevoLote : l) });
     } else {
@@ -113,8 +176,10 @@ const LotesManager = ({ data, setData }) => {
     }
     setShowModal(false);
     setEditingLote(null);
-    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasInutiles: '0', tiposPrendas: [], formaPago: 'unico', mesesPago: '1' });
+    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), prendasInutiles: '0', tiposPrendas: [], detallesPrendas: {}, ivaPrendas: '21', gastoEnvio: '0', ivaEnvio: '21', descuento: '0', tieneDescuento: false, formaPago: 'unico', mesesPago: '1' });
   };
+
+  const totales = calcularTotales();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -139,12 +204,14 @@ const LotesManager = ({ data, setData }) => {
                   <span style={{ padding: '0.25rem 0.75rem', background: '#dbeafe', color: '#1e40af', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{lote.codigo}</span>
                   <span style={{ color: '#6b7280' }}>{lote.proveedor}</span>
                   {lote.tiposPrendas && lote.tiposPrendas.map(tipo => (
-                    <span key={tipo} style={{ padding: '0.25rem 0.5rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '0.5rem', fontSize: '0.75rem' }}>{tipo}</span>
+                    <span key={tipo} style={{ padding: '0.25rem 0.5rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
+                      {tipo} ({lote.detallesPrendas?.[tipo]?.cantidad || 0})
+                    </span>
                   ))}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Fecha</p><p style={{ fontWeight: '600' }}>{new Date(lote.fecha).toLocaleDateString()}</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Unitario</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Inútiles</p><p style={{ fontWeight: '600' }}>{lote.prendasInutiles || 0}</p></div>
@@ -157,10 +224,14 @@ const LotesManager = ({ data, setData }) => {
                   setFormData({ 
                     proveedor: lote.proveedor, 
                     fecha: lote.fecha, 
-                    cantidad: lote.cantidad.toString(), 
-                    costeTotal: lote.costeTotal.toString(), 
                     prendasInutiles: (lote.prendasInutiles || 0).toString(),
                     tiposPrendas: lote.tiposPrendas || [],
+                    detallesPrendas: lote.detallesPrendas || {},
+                    ivaPrendas: (lote.ivaPrendas || 21).toString(),
+                    gastoEnvio: (lote.gastoEnvio || 0).toString(),
+                    ivaEnvio: (lote.ivaEnvio || 21).toString(),
+                    descuento: (lote.descuento || 0).toString(),
+                    tieneDescuento: (lote.descuento || 0) > 0,
                     formaPago: lote.mesesPago === 1 ? 'unico' : 'plazos', 
                     mesesPago: lote.mesesPago?.toString() || '1' 
                   }); 
@@ -180,7 +251,7 @@ const LotesManager = ({ data, setData }) => {
       )}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}>
-          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '32rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '48rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingLote ? 'Editar' : 'Nuevo'} Lote</h3>
               <button onClick={() => { setShowModal(false); setEditingLote(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -188,15 +259,14 @@ const LotesManager = ({ data, setData }) => {
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Proveedor</label><input type="text" value={formData.proveedor} onChange={(e) => setFormData({ ...formData, proveedor: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha</label><input type="date" value={formData.fecha} onChange={(e) => setFormData({ ...formData, fecha: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Cantidad</label><input type="number" value={formData.cantidad} onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Total</label><input type="number" step="0.01" value={formData.costeTotal} onChange={(e) => setFormData({ ...formData, costeTotal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Prendas Inútiles (desechables)</label><input type="number" value={formData.prendasInutiles} onChange={(e) => setFormData({ ...formData, prendasInutiles: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Proveedor</label><input type="text" value={formData.proveedor} onChange={(e) => setFormData({ ...formData, proveedor: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha</label><input type="date" value={formData.fecha} onChange={(e) => setFormData({ ...formData, fecha: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              </div>
               
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>Tipos de prendas en el lote</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
                   {tiposDisponibles.map(tipo => (
                     <div key={tipo} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: formData.tiposPrendas.includes(tipo) ? '#eff6ff' : '#f9fafb', borderRadius: '0.5rem', cursor: 'pointer', border: formData.tiposPrendas.includes(tipo) ? '2px solid #2563eb' : '2px solid transparent' }} onClick={() => handleTipoToggle(tipo)}>
                       <input type="checkbox" checked={formData.tiposPrendas.includes(tipo)} onChange={() => handleTipoToggle(tipo)} style={{ cursor: 'pointer' }} />
@@ -204,13 +274,81 @@ const LotesManager = ({ data, setData }) => {
                     </div>
                   ))}
                 </div>
-                <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>Seleccionados: {formData.tiposPrendas.length > 0 ? formData.tiposPrendas.join(', ') : 'Ninguno'}</p>
               </div>
 
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Forma de Pago</label><select value={formData.formaPago} onChange={(e) => { setFormData({ ...formData, formaPago: e.target.value, mesesPago: e.target.value === 'unico' ? '1' : formData.mesesPago }); }} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="unico">Pago único</option><option value="plazos">A plazos</option></select></div>
-              {formData.formaPago === 'plazos' && (
-                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Número de Meses</label><select value={formData.mesesPago} onChange={(e) => setFormData({ ...formData, mesesPago: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="2">2 meses</option><option value="3">3 meses</option><option value="4">4 meses</option><option value="5">5 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></div>
+              {formData.tiposPrendas.length > 0 && (
+                <div style={{ background: '#f9fafb', padding: '1rem', borderRadius: '0.5rem' }}>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1f2937' }}>Detalles por tipo de prenda</h4>
+                  {formData.tiposPrendas.map(tipo => (
+                    <div key={tipo} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginBottom: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>{tipo}</span>
+                      <input type="number" placeholder="Cantidad" value={formData.detallesPrendas[tipo]?.cantidad || ''} onChange={(e) => handleDetalleChange(tipo, 'cantidad', e.target.value)} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} />
+                      <input type="number" step="0.01" placeholder="Precio total €" value={formData.detallesPrendas[tipo]?.precio || ''} onChange={(e) => handleDetalleChange(tipo, 'precio', e.target.value)} style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} />
+                    </div>
+                  ))}
+                </div>
               )}
+
+              <div style={{ background: '#f0f9ff', padding: '1rem', borderRadius: '0.5rem' }}>
+                <h4 style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem', color: '#1f2937' }}>Costes adicionales</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.75rem' }}>
+                  <div><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>IVA Prendas (%)</label><input type="number" step="0.01" value={formData.ivaPrendas} onChange={(e) => setFormData({ ...formData, ivaPrendas: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
+                  <div style={{ display: 'flex', alignItems: 'end', fontSize: '0.875rem', color: '#6b7280' }}>+{totales.totalIvaPrendas.toFixed(2)} €</div>
+                  
+                  <div><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>Gasto Envío (€)</label><input type="number" step="0.01" value={formData.gastoEnvio} onChange={(e) => setFormData({ ...formData, gastoEnvio: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
+                  <div><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>IVA Envío (%)</label><input type="number" step="0.01" value={formData.ivaEnvio} onChange={(e) => setFormData({ ...formData, ivaEnvio: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.75rem' }}>
+                  <input type="checkbox" id="tieneDescuento" checked={formData.tieneDescuento} onChange={(e) => setFormData({ ...formData, tieneDescuento: e.target.checked })} style={{ cursor: 'pointer' }} />
+                  <label htmlFor="tieneDescuento" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>Aplicar descuento</label>
+                </div>
+                {formData.tieneDescuento && (
+                  <div style={{ marginTop: '0.5rem' }}><label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '500', marginBottom: '0.25rem', color: '#6b7280' }}>Descuento (€)</label><input type="number" step="0.01" value={formData.descuento} onChange={(e) => setFormData({ ...formData, descuento: e.target.value })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.875rem' }} /></div>
+                )}
+              </div>
+
+              <div style={{ background: '#ecfdf5', padding: '1rem', borderRadius: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Subtotal prendas:</span>
+                  <span style={{ fontWeight: '600' }}>{totales.subtotalPrendas.toFixed(2)} €</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>IVA prendas:</span>
+                  <span style={{ fontWeight: '600' }}>+{totales.totalIvaPrendas.toFixed(2)} €</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Envío + IVA:</span>
+                  <span style={{ fontWeight: '600' }}>+{totales.totalEnvio.toFixed(2)} €</span>
+                </div>
+                {totales.descuento > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Descuento:</span>
+                    <span style={{ fontWeight: '600', color: '#dc2626' }}>-{totales.descuento.toFixed(2)} €</span>
+                  </div>
+                )}
+                <div style={{ borderTop: '2px solid #10b981', paddingTop: '0.5rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '1rem', fontWeight: '700', color: '#065f46' }}>TOTAL:</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#065f46' }}>{totales.total.toFixed(2)} €</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Total prendas:</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{totales.cantidadTotal}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#6b7280' }}>Precio unitario:</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{totales.cantidadTotal > 0 ? (totales.total / totales.cantidadTotal).toFixed(2) : '0.00'} €</span>
+                </div>
+              </div>
+
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Prendas Inútiles (desechables)</label><input type="number" value={formData.prendasInutiles} onChange={(e) => setFormData({ ...formData, prendasInutiles: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Forma de Pago</label><select value={formData.formaPago} onChange={(e) => { setFormData({ ...formData, formaPago: e.target.value, mesesPago: e.target.value === 'unico' ? '1' : formData.mesesPago }); }} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="unico">Pago único</option><option value="plazos">A plazos</option></select></div>
+                {formData.formaPago === 'plazos' && (
+                  <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Número de Meses</label><select value={formData.mesesPago} onChange={(e) => setFormData({ ...formData, mesesPago: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="2">2 meses</option><option value="3">3 meses</option><option value="4">4 meses</option><option value="5">5 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></div>
+                )}
+              </div>
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button onClick={() => { setShowModal(false); setEditingLote(null); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button>
@@ -222,7 +360,6 @@ const LotesManager = ({ data, setData }) => {
     </div>
   );
 };
-
 const InventarioManager = ({ data, setData }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingPrenda, setEditingPrenda] = useState(null);
