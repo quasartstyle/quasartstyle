@@ -523,6 +523,8 @@ function App() {
                 </div>
               </div>
             </div>
+
+            {/* EXISTENCIAS */}
             <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>📦 Existencias</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
@@ -555,6 +557,119 @@ function App() {
                     </>
                   );
                 })()}
+              </div>
+            </div>
+
+            {/* CALIDAD */}
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>⭐ Calidad</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                {(() => {
+                  const lotesMes = data.lotes.filter(l => l.fecha && l.fecha.startsWith(selectedMonth));
+                  const prendasDefectuosas = lotesMes.reduce((sum, l) => sum + (l.prendasDefectuosas || 0), 0);
+                  const totalPrendas = lotesMes.reduce((sum, l) => sum + l.cantidad, 0);
+                  const porcDefectuosas = totalPrendas > 0 ? (prendasDefectuosas / totalPrendas * 100) : 0;
+                  const prendasLavadas = data.prendas.filter(p => {
+                    const fechaCreacion = p.id ? new Date(parseInt(p.id)).toISOString().slice(0, 7) : null;
+                    return fechaCreacion === selectedMonth && p.lavada;
+                  }).length;
+                  const porcATratar = totalPrendas > 0 ? (prendasLavadas / totalPrendas * 100) : 0;
+                  const prendasVendidasMes = data.prendas.filter(p => {
+                    const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
+                    return fechaVenta && fechaVenta.startsWith(selectedMonth);
+                  });
+                  const vendidasAlObjetivo = prendasVendidasMes.filter(p => p.precioVentaReal >= p.precioObjetivo && p.precioObjetivo > 0).length;
+                  const porcObjetivo = prendasVendidasMes.length > 0 ? (vendidasAlObjetivo / prendasVendidasMes.length * 100) : 0;
+                  return (
+                    <>
+                      <div style={{ background: '#fef3c7', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#78350f', marginBottom: '0.25rem' }}>Prendas defectuosas</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#92400e' }}>{porcDefectuosas.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#92400e', marginTop: '0.25rem' }}>{prendasDefectuosas} de {totalPrendas}</div></div>
+                      <div style={{ background: '#dbeafe', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#1e40af', marginBottom: '0.25rem' }}>Prendas a tratar (lavadas)</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e40af' }}>{porcATratar.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#1e40af', marginTop: '0.25rem' }}>{prendasLavadas} de {totalPrendas}</div></div>
+                      <div style={{ background: '#d1fae5', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#065f46', marginBottom: '0.25rem' }}>Ventas al precio objetivo</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#065f46' }}>{porcObjetivo.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#065f46', marginTop: '0.25rem' }}>{vendidasAlObjetivo} de {prendasVendidasMes.length}</div></div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* ANÁLISIS DE VENTAS */}
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>💰 Análisis de Ventas</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                {(() => {
+                  const prendasVendidasMes = data.prendas.filter(p => {
+                    const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
+                    return fechaVenta && fechaVenta.startsWith(selectedMonth);
+                  });
+                  const precioMax = prendasVendidasMes.length > 0 ? Math.max(...prendasVendidasMes.map(p => p.precioVentaReal)) : 0;
+                  const precioMin = prendasVendidasMes.length > 0 ? Math.min(...prendasVendidasMes.filter(p => p.precioVentaReal > 0).map(p => p.precioVentaReal)) : 0;
+                  const ticketMedio = prendasVendidasMes.length > 0 ? prendasVendidasMes.reduce((sum, p) => sum + p.precioVentaReal, 0) / prendasVendidasMes.length : 0;
+                  const costePromedio = prendasVendidasMes.length > 0 ? prendasVendidasMes.reduce((sum, p) => sum + p.precioCompra, 0) / prendasVendidasMes.length : 0;
+                  const totalVentas = prendasVendidasMes.reduce((sum, p) => sum + p.precioVentaReal, 0);
+                  const totalCostes = prendasVendidasMes.reduce((sum, p) => sum + p.precioCompra, 0);
+                  const margenBruto = totalVentas > 0 ? ((totalVentas - totalCostes) / totalVentas * 100) : 0;
+                  return (
+                    <>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Precio máximo</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{precioMax.toFixed(2)} €</div></div>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Precio mínimo</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ef4444' }}>{precioMin.toFixed(2)} €</div></div>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Ticket medio</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>{ticketMedio.toFixed(2)} €</div></div>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Coste promedio compra</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{costePromedio.toFixed(2)} €</div></div>
+                      <div style={{ background: '#d1fae5', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#065f46', marginBottom: '0.25rem' }}>Margen bruto promedio</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#065f46' }}>{margenBruto.toFixed(2)} %</div></div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            {/* RESULTADOS FINANCIEROS */}
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>📊 Resultados Financieros</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#10b981', marginBottom: '0.75rem' }}>Ingresos</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Ventas</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.totalVentas.toFixed(2)} €</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Otros ingresos</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.totalIngresos.toFixed(2)} €</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#d1fae5', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+                    <span style={{ fontWeight: '600', color: '#065f46' }}>Total Ingresos</span>
+                    <span style={{ fontWeight: 'bold', color: '#065f46' }}>{(currentMetrics.totalVentas + currentMetrics.totalIngresos).toFixed(2)} €</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#ef4444', marginBottom: '0.75rem' }}>Gastos</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Gastos manuales</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.totalGastosManuales.toFixed(2)} €</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Lotes (cuotas del mes)</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.gastosLotes.toFixed(2)} €</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Envío</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.gastosEnvio.toFixed(2)} €</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Lavado</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.gastosLavado.toFixed(2)} €</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
+                    <span style={{ fontWeight: '600', color: '#991b1b' }}>Total Gastos</span>
+                    <span style={{ fontWeight: 'bold', color: '#991b1b' }}>{currentMetrics.totalGastos.toFixed(2)} €</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 style={{ fontSize: '1rem', fontWeight: '600', color: '#2563eb', marginBottom: '0.75rem' }}>Beneficio</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', background: currentMetrics.beneficioNeto >= 0 ? '#d1fae5' : '#fee2e2', borderRadius: '0.5rem' }}>
+                    <div style={{ fontSize: '0.875rem', color: currentMetrics.beneficioNeto >= 0 ? '#065f46' : '#991b1b', marginBottom: '0.5rem' }}>Beneficio Neto</div>
+                    <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: currentMetrics.beneficioNeto >= 0 ? '#10b981' : '#ef4444' }}>{currentMetrics.beneficioNeto.toFixed(2)} €</div>
+                    <div style={{ fontSize: '0.75rem', color: currentMetrics.beneficioNeto >= 0 ? '#065f46' : '#991b1b', marginTop: '0.5rem' }}>Margen: {currentMetrics.margenBruto.toFixed(1)}%</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
