@@ -647,6 +647,36 @@ const InventarioManager = ({ data, setData }) => {
   );
 };
 
+const ConfigManager = ({ data, setData }) => {
+  const [tab, setTab] = useState('costes');
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Configuración</h2>
+      <div style={{ background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ borderBottom: '1px solid #e5e7eb', display: 'flex', padding: '0 1.5rem' }}>
+          <button onClick={() => setTab('costes')} style={{ padding: '1rem', borderBottom: tab === 'costes' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: '500', color: tab === 'costes' ? '#2563eb' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Costes</button>
+          <button onClick={() => setTab('alertas')} style={{ padding: '1rem', borderBottom: tab === 'alertas' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: '500', color: tab === 'alertas' ? '#2563eb' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Alertas</button>
+        </div>
+        <div style={{ padding: '1.5rem' }}>
+          {tab === 'costes' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '32rem' }}>
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Envío</label><input type="number" step="0.01" value={data.config.costeEnvio} onChange={(e) => setData({ ...data, config: { ...data.config, costeEnvio: parseFloat(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Lavado</label><input type="number" step="0.01" value={data.config.costeLavado} onChange={(e) => setData({ ...data, config: { ...data.config, costeLavado: parseFloat(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+            </div>
+          )}
+          {tab === 'alertas' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '32rem' }}>
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Días sin vender</label><input type="number" value={data.config.alertaDias} onChange={(e) => setData({ ...data, config: { ...data.config, alertaDias: parseInt(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Stock mínimo</label><input type="number" value={data.config.alertaStock} onChange={(e) => setData({ ...data, config: { ...data.config, alertaStock: parseInt(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Margen mínimo %</label><input type="number" value={data.config.alertaMargen} onChange={(e) => setData({ ...data, config: { ...data.config, alertaMargen: parseInt(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
