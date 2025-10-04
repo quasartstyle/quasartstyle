@@ -1,4 +1,259 @@
-import React, { useState, useEffect } from 'react';
+const costeCompraTotal = prendasMes.reduce((sum, p) => sum + (p.precioCompra || 0), 0);
+    const margenBruto = totalVentas > 0 ? ((totalVentas - costeCompraTotal) / totalVentas) * 100 : 0;
+    return { totalVentas, totalGastos, totalIngresos, beneficioNeto, prendasVendidas, ticketMedio, margenBruto, costesEnvio, costesLavado, ventasConfirmadas, ventasPendientes, prendasConfirmadas: prendasConfirmadas.length, prendasPendientes: prendasPendientes.length };
+  };
+
+  const currentMetrics = calculateMonthMetrics(selectedMonth);
+  const thisMonth = new Date().toISOString().slice(0, 7);
+  const isCurrentMonth = selectedMonth === thisMonth;
+  const alerts = [];
+  const stockActual = data.prendas.filter(p => p.estado === 'comprada' || p.estado === 'subida').length;
+  if (stockActual < data.config.alertaStock) alerts.push({ tipo: 'stock', mensaje: `Stock bajo: ${stockActual} prendas` });
+  if (currentMetrics.margenBruto < data.config.alertaMargen) alerts.push({ tipo: 'margen', mensaje: `Margen bajo: ${currentMetrics.margenBruto.toFixed(1)}%` });
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+        <div style={{ background: 'white', borderRadius: '1rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', padding: '2rem', width: '100%', maxWidth: '28rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <img src="/logo.png" alt="Quasart Style" style={{ width: '6rem', height: '6rem', margin: '0 auto 1rem', objectFit: 'contain' }} />
+            <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1f2937' }}>Quasart Style</h1>
+            <p style={{ color: '#6b7280' }}>Panel de Control Vinted</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleLogin()} placeholder="Contraseña" style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', outline: 'none' }} />
+            <button onClick={handleLogin} style={{ width: '100%', background: 'linear-gradient(to right, #2563eb, #1d4ed8)', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', border: 'none', cursor: 'pointer' }}>Entrar</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: '3rem', height: '3rem', border: '2px solid #2563eb', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }}></div>
+          <p style={{ color: '#6b7280' }}>Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
+      <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <img src="/logo.png" alt="Quasart Style" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain' }} />
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>Quasart Style</h1>
+            </div>
+            <button onClick={() => setIsAuthenticated(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}><LogOut size={20} /><span>Salir</span></button>
+          </div>
+        </div>
+      </header>
+      <nav style={{ background: 'white', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
+          <button onClick={() => setCurrentView('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'dashboard' ? '#2563eb' : 'transparent', color: currentView === 'dashboard' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><BarChart3 size={20} /><span style={{ fontWeight: '500' }}>Dashboard</span></button>
+          <button onClick={() => setCurrentView('estadisticas')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'estadisticas' ? '#2563eb' : 'transparent', color: currentView === 'estadisticas' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><PieChart size={20} /><span style={{ fontWeight: '500' }}>Estadísticas</span></button>
+          <button onClick={() => setCurrentView('lotes')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'lotes' ? '#2563eb' : 'transparent', color: currentView === 'lotes' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><Package size={20} /><span style={{ fontWeight: '500' }}>Lotes</span></button>
+          <button onClick={() => setCurrentView('inventario')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'inventario' ? '#2563eb' : 'transparent', color: currentView === 'inventario' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><TrendingUp size={20} /><span style={{ fontWeight: '500' }}>Inventario</span></button>
+          <button onClick={() => setCurrentView('config')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'config' ? '#2563eb' : 'transparent', color: currentView === 'config' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}><Settings size={20} /><span style={{ fontWeight: '500' }}>Config</span></button>
+        </div>
+      </nav>
+      {alerts.length > 0 && (
+        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem' }}>
+          <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <AlertCircle style={{ color: '#f59e0b', flexShrink: 0 }} size={20} />
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontWeight: '600', color: '#78350f', marginBottom: '0.5rem' }}>Alertas activas</h3>
+                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                  {alerts.map((alert, idx) => (<li key={idx} style={{ color: '#92400e', fontSize: '0.875rem' }}>{alert.mensaje}</li>))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <main style={{ maxWidth: '80rem', margin: '0 auto', padding: '1.5rem' }}>
+        {currentView === 'dashboard' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <Calendar size={20} style={{ color: '#6b7280' }} />
+                  <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} />
+                  {!isCurrentMonth && (<button onClick={() => setSelectedMonth(thisMonth)} style={{ color: '#2563eb', fontSize: '0.875rem', fontWeight: '500', background: 'none', border: 'none', cursor: 'pointer' }}>Mes actual</button>)}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #3b82f6, #2563eb)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Ventas Totales</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.totalVentas.toFixed(2)} €</p><p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>{currentMetrics.prendasVendidas} prendas</p></div></div>
+              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #10b981, #059669)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Confirmadas</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.ventasConfirmadas.toFixed(2)} €</p><p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>{currentMetrics.prendasConfirmadas} prendas</p></div></div>
+              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #f59e0b, #d97706)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Pendientes</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.ventasPendientes.toFixed(2)} €</p><p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>{currentMetrics.prendasPendientes} prendas</p></div></div>
+              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #ef4444, #dc2626)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Gastos</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.totalGastos.toFixed(2)} €</p><p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>Envío: {currentMetrics.costesEnvio.toFixed(2)} € | Lavado: {currentMetrics.costesLavado.toFixed(2)} €</p></div></div>
+              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #10b981, #059669)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Beneficio</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.beneficioNeto.toFixed(2)} €</p></div></div>
+              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #8b5cf6, #7c3aed)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Margen</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.margenBruto.toFixed(1)} %</p><p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>Ticket: {currentMetrics.ticketMedio.toFixed(2)} €</p></div></div>
+            </div>
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>Stock actual</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                <div style={{ textAlign: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{data.prendas.filter(p => p.estado === 'comprada').length}</div><div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Compradas</div></div>
+                <div style={{ textAlign: 'center', padding: '1rem', background: '#eff6ff', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1e3a8a' }}>{data.prendas.filter(p => p.estado === 'subida').length}</div><div style={{ fontSize: '0.875rem', color: '#2563eb', marginTop: '0.25rem' }}>En Vinted</div></div>
+                <div style={{ textAlign: 'center', padding: '1rem', background: '#fef3c7', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#78350f' }}>{data.prendas.filter(p => p.estado === 'vendida-pendiente').length}</div><div style={{ fontSize: '0.875rem', color: '#f59e0b', marginTop: '0.25rem' }}>Pendientes</div></div>
+                <div style={{ textAlign: 'center', padding: '1rem', background: '#d1fae5', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#065f46' }}>{data.prendas.filter(p => p.estado === 'vendida-confirmada').length}</div><div style={{ fontSize: '0.875rem', color: '#10b981', marginTop: '0.25rem' }}>Vendidas</div></div>
+              </div>
+            </div>
+          </div>
+        )}
+        {currentView === 'estadisticas' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                <Calendar size={20} style={{ color: '#6b7280' }} />
+                <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} />
+              </div>
+              
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>Estadísticas del Mes</h2>
+              
+              {(() => {
+                const prendasMes = data.prendas.filter(p => {
+                  const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
+                  return fechaVenta && fechaVenta.startsWith(selectedMonth);
+                });
+                const lotesDelMes = data.lotes.filter(l => l.fecha && l.fecha.startsWith(selectedMonth));
+                const totalCompradas = lotesDelMes.reduce((sum, l) => sum + l.cantidad, 0);
+                const totalDefectuosas = lotesDelMes.reduce((sum, l) => sum + (l.prendasDefectuosas || 0), 0);
+                const ratioDefectuosas = totalCompradas > 0 ? (totalDefectuosas / totalCompradas) * 100 : 0;
+                const prendasVendidas = prendasMes.length;
+                const stockInicial = data.prendas.filter(p => {
+                  const fecha = new Date(selectedMonth + '-01');
+                  const fechaCreacion = p.fechaSubida ? new Date(p.fechaSubida) : new Date();
+                  return fechaCreacion < fecha && (p.estado === 'comprada' || p.estado === 'subida');
+                }).length;
+                const rotacion = (totalCompradas + stockInicial) > 0 ? prendasVendidas / (totalCompradas + stockInicial) : 0;
+                const tiempoPromedio = prendasMes.filter(p => p.fechaSubida && p.fechaVentaConfirmada).reduce((sum, p) => {
+                  const dias = Math.floor((new Date(p.fechaVentaConfirmada) - new Date(p.fechaSubida)) / (1000 * 60 * 60 * 24));
+                  return sum + dias;
+                }, 0) / (prendasMes.filter(p => p.fechaSubida && p.fechaVentaConfirmada).length || 1);
+                const precioMax = prendasMes.length > 0 ? Math.max(...prendasMes.map(p => p.precioVentaReal || 0)) : 0;
+                const precioMin = prendasMes.length > 0 ? Math.min(...prendasMes.map(p => p.precioVentaReal || 0).filter(p => p > 0)) : 0;
+                const ventasObjetivo = prendasMes.filter(p => p.precioVentaReal >= p.precioObjetivo).length;
+                const ratioObjetivo = prendasMes.length > 0 ? (ventasObjetivo / prendasMes.length) * 100 : 0;
+                const costePromCompra = prendasMes.length > 0 ? prendasMes.reduce((sum, p) => sum + p.precioCompra, 0) / prendasMes.length : 0;
+                const margenPromedio = prendasMes.length > 0 ? prendasMes.reduce((sum, p) => {
+                  const margen = p.precioVentaReal > 0 ? ((p.precioVentaReal - p.precioCompra) / p.precioVentaReal) * 100 : 0;
+                  return sum + margen;
+                }, 0) / prendasMes.length : 0;
+                
+                return (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>📦 Existencias</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Prendas compradas</span>
+                            <span style={{ fontWeight: '600' }}>{totalCompradas}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Prendas vendidas</span>
+                            <span style={{ fontWeight: '600' }}>{prendasVendidas}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Ratio de rotación</span>
+                            <span style={{ fontWeight: '600', color: rotacion >= 0.5 ? '#10b981' : '#ef4444' }}>{rotacion.toFixed(2)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0' }}>
+                            <span style={{ color: '#6b7280' }}>Tiempo promedio en Vinted</span>
+                            <span style={{ fontWeight: '600' }}>{Math.round(tiempoPromedio)} días</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>✨ Calidad</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Prendas defectuosas</span>
+                            <span style={{ fontWeight: '600', color: ratioDefectuosas > 30 ? '#ef4444' : '#10b981' }}>{ratioDefectuosas.toFixed(1)}%</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Total defectuosas</span>
+                            <span style={{ fontWeight: '600' }}>{totalDefectuosas}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0' }}>
+                            <span style={{ color: '#6b7280' }}>Ventas al precio objetivo</span>
+                            <span style={{ fontWeight: '600', color: ratioObjetivo >= 60 ? '#10b981' : '#ef4444' }}>{ratioObjetivo.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>💰 Ventas</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Precio máximo</span>
+                            <span style={{ fontWeight: '600' }}>{precioMax.toFixed(2)} €</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Precio mínimo</span>
+                            <span style={{ fontWeight: '600' }}>{precioMin.toFixed(2)} €</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Ticket medio</span>
+                            <span style={{ fontWeight: '600' }}>{currentMetrics.ticketMedio.toFixed(2)} €</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px solid #e5e7eb' }}>
+                            <span style={{ color: '#6b7280' }}>Coste promedio compra</span>
+                            <span style={{ fontWeight: '600' }}>{costePromCompra.toFixed(2)} €</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0' }}>
+                            <span style={{ color: '#6b7280' }}>Margen bruto promedio</span>
+                            <span style={{ fontWeight: '600', color: margenPromedio >= 60 ? '#10b981' : '#ef4444' }}>{margenPromedio.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>📊 Costes Operativos</h3>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                        <div style={{ textAlign: 'center', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Coste envío unitario</div>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{data.config.costeEnvio.toFixed(2)} €</div>
+                        </div>
+                        <div style={{ textAlign: 'center', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Coste lavado unitario</div>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{data.config.costeLavado.toFixed(2)} €</div>
+                        </div>
+                        <div style={{ textAlign: 'center', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Total envíos mes</div>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.costesEnvio.toFixed(2)} €</div>
+                        </div>
+                        <div style={{ textAlign: 'center', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
+                          <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Total lavado mes</div>
+                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.costesLavado.toFixed(2)} €</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+        )}
+        {currentView === 'lotes' && <LotesManager data={data} setData={saveData} />}
+        {currentView === 'inventario' && <InventarioManager data={data} setData={saveData} />}
+        {currentView === 'config' && <ConfigManager data={data} setData={saveData} />}
+      </main>
+    </div>
+  );
+}
+
+export default App;import React, { useState, useEffect } from 'react';
 import { BarChart3, Package, TrendingUp, Settings, LogOut, Calendar, Plus, Edit2, Trash2, X, Search, AlertCircle, PieChart } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
@@ -106,18 +361,7 @@ const LotesManager = ({ data, setData }) => {
           <div key={lote.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <span style={{ padding: '0.25rem 0.75rem', background: '#dbeafe', color: '#1e40af', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{lote.codigo}</span>
-                  <span style={{ color: '#6b7280' }}>{lote.proveedor}</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Fecha</p><p style={{ fontWeight: '600' }}>{new Date(lote.fecha).toLocaleDateString()}</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
-                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Unitario</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button onClick={() => { setEditingLote(lote); setFormData({ proveedor: lote.proveedor, fecha: lote.fecha, cantidad: lote.cantidad.toString(), costeTotal: lote.costeTotal.toString(), prendasDefectuosas: lote.prendasDefectuosas.toString() }); setShowModal(true); }} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button>
                 <button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, lotes: data.lotes.filter(l => l.id !== lote.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button>
               </div>
@@ -149,7 +393,6 @@ const LotesManager = ({ data, setData }) => {
     </div>
   );
 };
-// CONTINÚA AQUÍ DESPUÉS DE LA PARTE 1
 
 // COMPONENTE INVENTARIO
 const InventarioManager = ({ data, setData }) => {
@@ -157,17 +400,17 @@ const InventarioManager = ({ data, setData }) => {
   const [editingPrenda, setEditingPrenda] = useState(null);
   const [filtro, setFiltro] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
-  const [formData, setFormData] = useState({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '' });
+  const [formData, setFormData] = useState({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '', lavada: false });
   const tipos = ['Camiseta', 'Camisa', 'Pantalon', 'Vestido', 'Chaqueta', 'Sudadera', 'Jersey', 'Zapatos', 'Otro'];
 
   const resetForm = () => {
-    setFormData({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '' });
+    setFormData({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '', lavada: false });
     setEditingPrenda(null);
   };
 
   const handleEdit = (prenda) => {
     setEditingPrenda(prenda);
-    setFormData({ loteId: prenda.loteId, tipo: prenda.tipo, talla: prenda.talla, precioObjetivo: prenda.precioObjetivo.toString(), precioVentaReal: prenda.precioVentaReal.toString(), fechaSubida: prenda.fechaSubida || '', fechaVentaPendiente: prenda.fechaVentaPendiente || '', fechaVentaConfirmada: prenda.fechaVentaConfirmada || '' });
+    setFormData({ loteId: prenda.loteId, tipo: prenda.tipo, talla: prenda.talla, precioObjetivo: prenda.precioObjetivo.toString(), precioVentaReal: prenda.precioVentaReal.toString(), fechaSubida: prenda.fechaSubida || '', fechaVentaPendiente: prenda.fechaVentaPendiente || '', fechaVentaConfirmada: prenda.fechaVentaConfirmada || '', lavada: prenda.lavada || false });
     setShowModal(true);
   };
 
@@ -188,7 +431,7 @@ const InventarioManager = ({ data, setData }) => {
       precioCompra: lote.costeUnitario, precioObjetivo: parseFloat(formData.precioObjetivo) || 0,
       precioVentaReal: parseFloat(formData.precioVentaReal) || 0,
       fechaSubida: formData.fechaSubida || null, fechaVentaPendiente: formData.fechaVentaPendiente || null,
-      fechaVentaConfirmada: formData.fechaVentaConfirmada || null, estado
+      fechaVentaConfirmada: formData.fechaVentaConfirmada || null, estado, lavada: formData.lavada
     };
     if (editingPrenda) {
       setData({ ...data, prendas: data.prendas.map(p => p.id === editingPrenda.id ? prendaData : p) });
@@ -217,8 +460,8 @@ const InventarioManager = ({ data, setData }) => {
           <select value={filtro} onChange={(e) => setFiltro(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="todos">Todos</option><option value="comprada">Compradas</option><option value="subida">En Vinted</option><option value="vendida-pendiente">Pendientes</option><option value="vendida-confirmada">Vendidas</option></select>
         </div>
       </div>
-      {prendas.length === 0 ? (<div style={{ background: 'white', borderRadius: '0.5rem', padding: '3rem', textAlign: 'center' }}><Package size={48} style={{ margin: '0 auto 1rem', color: '#9ca3af' }} /><p style={{ color: '#6b7280' }}>No hay prendas</p></div>) : (prendas.map(p => (<div key={p.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><div style={{ flex: 1 }}><div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem' }}><span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span><span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: p.estado === 'comprada' ? '#f3f4f6' : p.estado === 'subida' ? '#dbeafe' : p.estado === 'vendida-pendiente' ? '#fef3c7' : '#d1fae5', color: p.estado === 'comprada' ? '#1f2937' : p.estado === 'subida' ? '#1e40af' : p.estado === 'vendida-pendiente' ? '#92400e' : '#065f46' }}>{p.estado}</span></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}><div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div><div><p style={{ color: '#6b7280' }}>Tipo</p><p style={{ fontWeight: '600' }}>{p.tipo}</p></div><div><p style={{ color: '#6b7280' }}>Talla</p><p style={{ fontWeight: '600' }}>{p.talla}</p></div><div><p style={{ color: '#6b7280' }}>Compra</p><p style={{ fontWeight: '600' }}>{p.precioCompra.toFixed(2)} €</p></div><div><p style={{ color: '#6b7280' }}>Venta</p><p style={{ fontWeight: '600', color: '#10b981' }}>{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div></div></div><div style={{ display: 'flex', gap: '0.5rem' }}><button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button><button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button></div></div></div>)))}
-      {showModal && (<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}><div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '48rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingPrenda ? 'Editar Prenda' : 'Nueva Prenda'}</h3><button onClick={() => { setShowModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button></div><div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Lote</label><select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={editingPrenda}><option value="">Selecciona</option>{data.lotes.map(l => <option key={l.id} value={l.id}>{l.codigo}</option>)}</select></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Tipo</label><select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="">Selecciona</option>{tipos.map(t => <option key={t} value={t}>{t}</option>)}</select></div></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Talla</label><input type="text" value={formData.talla} onChange={(e) => setFormData({ ...formData, talla: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="M, L, 42..." /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Objetivo</label><input type="number" step="0.01" value={formData.precioObjetivo} onChange={(e) => setFormData({ ...formData, precioObjetivo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="20.00" /></div></div><div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}><h4 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Estado de la prenda</h4><div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Subida</label><input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Venta Pendiente</label><input type="date" value={formData.fechaVentaPendiente} onChange={(e) => setFormData({ ...formData, fechaVentaPendiente: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Venta Real</label><input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="18.50" /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Confirmada</label><input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div></div></div></div></div><div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}><button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button><button onClick={handleSubmit} style={{ flex: 1, padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>{editingPrenda ? 'Guardar' : 'Crear'}</button></div></div></div>)}
+      {prendas.length === 0 ? (<div style={{ background: 'white', borderRadius: '0.5rem', padding: '3rem', textAlign: 'center' }}><Package size={48} style={{ margin: '0 auto 1rem', color: '#9ca3af' }} /><p style={{ color: '#6b7280' }}>No hay prendas</p></div>) : (prendas.map(p => (<div key={p.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><div style={{ flex: 1 }}><div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}><span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span><span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: p.estado === 'comprada' ? '#f3f4f6' : p.estado === 'subida' ? '#dbeafe' : p.estado === 'vendida-pendiente' ? '#fef3c7' : '#d1fae5', color: p.estado === 'comprada' ? '#1f2937' : p.estado === 'subida' ? '#1e40af' : p.estado === 'vendida-pendiente' ? '#92400e' : '#065f46' }}>{p.estado}</span>{p.lavada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af' }}>🧼 Lavada</span>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}><div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div><div><p style={{ color: '#6b7280' }}>Tipo</p><p style={{ fontWeight: '600' }}>{p.tipo}</p></div><div><p style={{ color: '#6b7280' }}>Talla</p><p style={{ fontWeight: '600' }}>{p.talla}</p></div><div><p style={{ color: '#6b7280' }}>Compra</p><p style={{ fontWeight: '600' }}>{p.precioCompra.toFixed(2)} €</p></div><div><p style={{ color: '#6b7280' }}>Venta</p><p style={{ fontWeight: '600', color: '#10b981' }}>{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div></div></div><div style={{ display: 'flex', gap: '0.5rem' }}><button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button><button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button></div></div></div>)))}
+      {showModal && (<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}><div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '48rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingPrenda ? 'Editar Prenda' : 'Nueva Prenda'}</h3><button onClick={() => { setShowModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button></div><div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Lote</label><select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={editingPrenda}><option value="">Selecciona</option>{data.lotes.map(l => <option key={l.id} value={l.id}>{l.codigo}</option>)}</select></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Tipo</label><select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="">Selecciona</option>{tipos.map(t => <option key={t} value={t}>{t}</option>)}</select></div></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Talla</label><input type="text" value={formData.talla} onChange={(e) => setFormData({ ...formData, talla: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="M, L, 42..." /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Objetivo</label><input type="number" step="0.01" value={formData.precioObjetivo} onChange={(e) => setFormData({ ...formData, precioObjetivo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="20.00" /></div></div><div><label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}><input type="checkbox" checked={formData.lavada} onChange={(e) => setFormData({ ...formData, lavada: e.target.checked })} style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer' }} /><span style={{ fontSize: '0.875rem', fontWeight: '500' }}>Prenda lavada (+{data.config.costeLavado.toFixed(2)} €)</span></label></div><div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}><h4 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Estado de la prenda</h4><div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Subida</label><input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Venta Pendiente</label><input type="date" value={formData.fechaVentaPendiente} onChange={(e) => setFormData({ ...formData, fechaVentaPendiente: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Venta Real</label><input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="18.50" /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Confirmada</label><input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div></div></div></div></div><div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}><button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button><button onClick={handleSubmit} style={{ flex: 1, padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>{editingPrenda ? 'Guardar' : 'Crear'}</button></div></div></div>)}
     </div>
   );
 };
@@ -276,129 +519,30 @@ function App() {
       const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
       return fechaVenta && fechaVenta.startsWith(month);
     });
+    const prendasConfirmadas = prendasMes.filter(p => p.fechaVentaConfirmada);
+    const prendasPendientes = prendasMes.filter(p => p.fechaVentaPendiente && !p.fechaVentaConfirmada);
     const gastosMes = data.gastos.filter(g => g.fecha && g.fecha.startsWith(month));
     const ingresosMes = data.ingresos.filter(i => i.fecha && i.fecha.startsWith(month));
     const totalVentas = prendasMes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
-    const totalGastos = gastosMes.reduce((sum, g) => sum + g.cantidad, 0);
+    const ventasConfirmadas = prendasConfirmadas.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+    const ventasPendientes = prendasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+    const costesEnvio = prendasMes.length * data.config.costeEnvio;
+    const costesLavado = prendasMes.filter(p => p.lavada).length * data.config.costeLavado;
+    const totalGastos = gastosMes.reduce((sum, g) => sum + g.cantidad, 0) + costesEnvio + costesLavado;
     const totalIngresos = ingresosMes.reduce((sum, i) => sum + i.cantidad, 0);
     const beneficioNeto = totalVentas + totalIngresos - totalGastos;
     const prendasVendidas = prendasMes.length;
     const ticketMedio = prendasVendidas > 0 ? totalVentas / prendasVendidas : 0;
-    const costeCompraTotal = prendasMes.reduce((sum, p) => sum + (p.precioCompra || 0), 0);
-    const margenBruto = totalVentas > 0 ? ((totalVentas - costeCompraTotal) / totalVentas) * 100 : 0;
-    return { totalVentas, totalGastos, totalIngresos, beneficioNeto, prendasVendidas, ticketMedio, margenBruto };
-  };
-
-  const currentMetrics = calculateMonthMetrics(selectedMonth);
-  const thisMonth = new Date().toISOString().slice(0, 7);
-  const isCurrentMonth = selectedMonth === thisMonth;
-  const alerts = [];
-  const stockActual = data.prendas.filter(p => p.estado === 'comprada' || p.estado === 'subida').length;
-  if (stockActual < data.config.alertaStock) alerts.push({ tipo: 'stock', mensaje: `Stock bajo: ${stockActual} prendas` });
-  if (currentMetrics.margenBruto < data.config.alertaMargen) alerts.push({ tipo: 'margen', mensaje: `Margen bajo: ${currentMetrics.margenBruto.toFixed(1)}%` });
-
-  if (!isAuthenticated) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-        <div style={{ background: 'white', borderRadius: '1rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', padding: '2rem', width: '100%', maxWidth: '28rem' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <img src="/logo.png" alt="Quasart Style" style={{ width: '6rem', height: '6rem', margin: '0 auto 1rem', objectFit: 'contain' }} />
-            <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1f2937' }}>Quasart Style</h1>
-            <p style={{ color: '#6b7280' }}>Panel de Control Vinted</p>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && handleLogin()} placeholder="Contraseña" style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', outline: 'none' }} />
-            <button onClick={handleLogin} style={{ width: '100%', background: 'linear-gradient(to right, #2563eb, #1d4ed8)', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '500', border: 'none', cursor: 'pointer' }}>Entrar</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ width: '3rem', height: '3rem', border: '2px solid #2563eb', borderTopColor: 'transparent', borderRadius: '50%', margin: '0 auto 1rem' }}></div>
-          <p style={{ color: '#6b7280' }}>Cargando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <header style={{ background: 'white', borderBottom: '1px solid #e5e7eb', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <img src="/logo.png" alt="Quasart Style" style={{ width: '2.5rem', height: '2.5rem', objectFit: 'contain' }} />
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>Quasart Style</h1>
-            </div>
-            <button onClick={() => setIsAuthenticated(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}><LogOut size={20} /><span>Salir</span></button>
-          </div>
-        </div>
-      </header>
-      <nav style={{ background: 'white', borderBottom: '1px solid #e5e7eb' }}>
-        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '0.75rem 1rem', display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
-          <button onClick={() => setCurrentView('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'dashboard' ? '#2563eb' : 'transparent', color: currentView === 'dashboard' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer' }}><BarChart3 size={20} /><span style={{ fontWeight: '500' }}>Dashboard</span></button>
-          <button onClick={() => setCurrentView('estadisticas')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'estadisticas' ? '#2563eb' : 'transparent', color: currentView === 'estadisticas' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer' }}><PieChart size={20} /><span style={{ fontWeight: '500' }}>Estadísticas</span></button>
-          <button onClick={() => setCurrentView('lotes')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'lotes' ? '#2563eb' : 'transparent', color: currentView === 'lotes' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer' }}><Package size={20} /><span style={{ fontWeight: '500' }}>Lotes</span></button>
-          <button onClick={() => setCurrentView('inventario')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'inventario' ? '#2563eb' : 'transparent', color: currentView === 'inventario' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer' }}><TrendingUp size={20} /><span style={{ fontWeight: '500' }}>Inventario</span></button>
-          <button onClick={() => setCurrentView('config')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.5rem', background: currentView === 'config' ? '#2563eb' : 'transparent', color: currentView === 'config' ? 'white' : '#6b7280', border: 'none', cursor: 'pointer' }}><Settings size={20} /><span style={{ fontWeight: '500' }}>Config</span></button>
-        </div>
-      </nav>
-      {alerts.length > 0 && (
-        <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem' }}>
-          <div style={{ background: '#fef3c7', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <AlertCircle style={{ color: '#f59e0b', flexShrink: 0 }} size={20} />
-              <div style={{ flex: 1 }}>
-                <h3 style={{ fontWeight: '600', color: '#78350f', marginBottom: '0.5rem' }}>Alertas activas</h3>
-                <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                  {alerts.map((alert, idx) => (<li key={idx} style={{ color: '#92400e', fontSize: '0.875rem' }}>{alert.mensaje}</li>))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      <main style={{ maxWidth: '80rem', margin: '0 auto', padding: '1.5rem' }}>
-        {currentView === 'dashboard' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <Calendar size={20} style={{ color: '#6b7280' }} />
-                  <input type="month" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} />
-                  {!isCurrentMonth && (<button onClick={() => setSelectedMonth(thisMonth)} style={{ color: '#2563eb', fontSize: '0.875rem', fontWeight: '500', background: 'none', border: 'none', cursor: 'pointer' }}>Mes actual</button>)}
+    const costeCompra0.75rem', marginBottom: '0.75rem' }}>
+                  <span style={{ padding: '0.25rem 0.75rem', background: '#dbeafe', color: '#1e40af', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{lote.codigo}</span>
+                  <span style={{ color: '#6b7280' }}>{lote.proveedor}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Fecha</p><p style={{ fontWeight: '600' }}>{new Date(lote.fecha).toLocaleDateString()}</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Defectuosas</p><p style={{ fontWeight: '600', color: '#ef4444' }}>{lote.prendasDefectuosas}</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Unitario</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
                 </div>
               </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #3b82f6, #2563eb)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Ventas</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.totalVentas.toFixed(2)} €</p><p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>{currentMetrics.prendasVendidas} prendas</p></div></div>
-              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #ef4444, #dc2626)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Gastos</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.totalGastos.toFixed(2)} €</p></div></div>
-              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #10b981, #059669)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Beneficio</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.beneficioNeto.toFixed(2)} €</p></div></div>
-              <div style={{ background: 'white', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ height: '0.5rem', background: 'linear-gradient(to right, #8b5cf6, #7c3aed)' }}></div><div style={{ padding: '1.5rem' }}><h3 style={{ fontSize: '0.875rem', fontWeight: '500', color: '#6b7280', marginBottom: '0.5rem' }}>Margen</h3><p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.margenBruto.toFixed(1)} %</p><p style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>Ticket: {currentMetrics.ticketMedio.toFixed(2)} €</p></div></div>
-            </div>
-            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>Stock actual</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                <div style={{ textAlign: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{data.prendas.filter(p => p.estado === 'comprada').length}</div><div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Compradas</div></div>
-                <div style={{ textAlign: 'center', padding: '1rem', background: '#eff6ff', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1e3a8a' }}>{data.prendas.filter(p => p.estado === 'subida').length}</div><div style={{ fontSize: '0.875rem', color: '#2563eb', marginTop: '0.25rem' }}>En Vinted</div></div>
-                <div style={{ textAlign: 'center', padding: '1rem', background: '#fef3c7', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#78350f' }}>{data.prendas.filter(p => p.estado === 'vendida-pendiente').length}</div><div style={{ fontSize: '0.875rem', color: '#f59e0b', marginTop: '0.25rem' }}>Pendientes</div></div>
-                <div style={{ textAlign: 'center', padding: '1rem', background: '#d1fae5', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#065f46' }}>{data.prendas.filter(p => p.estado === 'vendida-confirmada').length}</div><div style={{ fontSize: '0.875rem', color: '#10b981', marginTop: '0.25rem' }}>Vendidas</div></div>
-              </div>
-            </div>
-          </div>
-        )}
-        {currentView === 'estadisticas' && (<div style={{ background: 'white', borderRadius: '0.5rem', padding: '3rem', textAlign: 'center' }}><PieChart size={48} style={{ margin: '0 auto 1rem', color: '#9ca3af' }} /><p style={{ color: '#6b7280' }}>Estadísticas - Próximamente</p></div>)}
-        {currentView === 'lotes' && <LotesManager data={data} setData={saveData} />}
-        {currentView === 'inventario' && <InventarioManager data={data} setData={saveData} />}
-        {currentView === 'config' && <ConfigManager data={data} setData={saveData} />}
-      </main>
-    </div>
-  );
-}
-
-export default App;
+              <div style={{ display: 'flex', gap: '
