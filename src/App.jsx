@@ -1945,16 +1945,11 @@ function App() {
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>📈 Histórico Total</h3>
               
               {(() => {
-                const [mesHistorico, setMesHistorico] = React.useState(() => {
-                  const hoy = new Date();
-                  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
-                });
-                
+                // Datos históricos totales
                 const todasVentasConfirmadas = data.prendas.filter(p => p.fechaVentaConfirmada);
                 const todasVentasPendientes = data.prendas.filter(p => p.fechaVentaPendiente && !p.fechaVentaConfirmada);
                 
                 const totalVentasConfirmadas = todasVentasConfirmadas.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
-                const totalVentasPendientes = todasVentasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
                 
                 const todosGastosManuales = data.gastos.reduce((sum, g) => sum + g.cantidad, 0);
                 const todosGastosEnvio = todasVentasConfirmadas.length * data.config.costeEnvio;
@@ -1971,16 +1966,6 @@ function App() {
                 const totalGastosHistorico = todosGastosManuales + todosGastosEnvio + todosGastosLavado + todosGastosDestacados + todosGastosLotes;
                 
                 const beneficioConfirmado = totalVentasConfirmadas - totalGastosHistorico;
-                
-                // Métricas del mes seleccionado
-                const metricasMesSeleccionado = calculateMonthMetrics(mesHistorico);
-                
-                // Navegar meses
-                const cambiarMes = (direccion) => {
-                  const [year, month] = mesHistorico.split('-').map(Number);
-                  const fecha = new Date(year, month - 1 + direccion, 1);
-                  setMesHistorico(`${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`);
-                };
                 
                 // Datos para gráfica (enero a diciembre del año actual)
                 const anoActual = new Date().getFullYear();
@@ -2042,65 +2027,6 @@ function App() {
                             <span style={{ fontWeight: 'bold' }}>
                               {todasVentasConfirmadas.length > 0 ? (totalVentasConfirmadas / todasVentasConfirmadas.length).toFixed(2) : '0.00'}€
                             </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Selector de Mes */}
-                      <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', borderRadius: '0.75rem', padding: '1.5rem', color: 'white' }}>
-                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '1rem', textAlign: 'center' }}>💰 Beneficio por Mes</div>
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                          <button 
-                            onClick={() => cambiarMes(-1)}
-                            style={{ 
-                              background: 'rgba(255,255,255,0.2)', 
-                              border: 'none', 
-                              color: 'white', 
-                              padding: '0.5rem 1rem', 
-                              borderRadius: '0.5rem', 
-                              cursor: 'pointer',
-                              fontSize: '1.25rem',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            ←
-                          </button>
-                          
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '1rem', fontWeight: 'bold' }}>
-                              {new Date(mesHistorico + '-01').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-                            </div>
-                          </div>
-                          
-                          <button 
-                            onClick={() => cambiarMes(1)}
-                            style={{ 
-                              background: 'rgba(255,255,255,0.2)', 
-                              border: 'none', 
-                              color: 'white', 
-                              padding: '0.5rem 1rem', 
-                              borderRadius: '0.5rem', 
-                              cursor: 'pointer',
-                              fontSize: '1.25rem',
-                              fontWeight: 'bold'
-                            }}
-                          >
-                            →
-                          </button>
-                        </div>
-                        
-                        <div style={{ 
-                          padding: '1.5rem', 
-                          background: 'rgba(255,255,255,0.15)', 
-                          borderRadius: '0.5rem',
-                          textAlign: 'center'
-                        }}>
-                          <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                            {metricasMesSeleccionado.beneficioNeto >= 0 ? '+' : ''}{metricasMesSeleccionado.beneficioNeto.toFixed(2)}€
-                          </div>
-                          <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>
-                            Ingresos: {metricasMesSeleccionado.totalVentas.toFixed(2)}€ | Gastos: {metricasMesSeleccionado.totalGastos.toFixed(2)}€
                           </div>
                         </div>
                       </div>
