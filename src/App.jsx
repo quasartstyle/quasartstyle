@@ -989,8 +989,14 @@ const gastosDestacados = data.prendas
   .filter(p => p.fechaSubida && p.fechaSubida.startsWith(month))
   .reduce((sum, p) => {
     let total = 0;
-    if (p.destacada && p.costeDestacado) total += p.costeDestacado;
-    if (p.destacadaDespuesResubida && p.costeDestacadoDespuesResubida) total += p.costeDestacadoDespuesResubida;
+    // Destacado normal (solo si no está resubida)
+    if (p.destacada && !p.resubida && p.costeDestacado) {
+      total += parseFloat(p.costeDestacado);
+    }
+    // Destacado después de resubir
+    if (p.destacadaDespuesResubida && p.costeDestacadoDespuesResubida) {
+      total += parseFloat(p.costeDestacadoDespuesResubida);
+    }
     return sum + total;
   }, 0);
   
