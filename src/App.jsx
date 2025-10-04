@@ -56,7 +56,7 @@ const useFirebaseData = () => {
 const LotesManager = ({ data, setData }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingLote, setEditingLote] = useState(null);
-  const [formData, setFormData] = useState({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasDefectuosas: '0' });
+  const [formData, setFormData] = useState({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasDefectuosas: '0', formaPago: 'unico', mesesPago: '1' });
 
   const generarCodigoLote = (proveedor, fecha) => {
     const prov = proveedor.slice(0, 3).toUpperCase();
@@ -75,7 +75,9 @@ const LotesManager = ({ data, setData }) => {
       id: editingLote?.id || Date.now().toString(),
       codigo, proveedor: formData.proveedor, fecha: formData.fecha,
       cantidad: parseInt(formData.cantidad), costeTotal: parseFloat(formData.costeTotal),
-      costeUnitario, prendasDefectuosas: parseInt(formData.prendasDefectuosas)
+      costeUnitario, prendasDefectuosas: parseInt(formData.prendasDefectuosas),
+      formaPago: formData.formaPago,
+      mesesPago: parseInt(formData.mesesPago)
     };
     if (editingLote) {
       setData({ ...data, lotes: data.lotes.map(l => l.id === editingLote.id ? nuevoLote : l) });
@@ -84,7 +86,7 @@ const LotesManager = ({ data, setData }) => {
     }
     setShowModal(false);
     setEditingLote(null);
-    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasDefectuosas: '0' });
+    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasDefectuosas: '0', formaPago: 'unico', mesesPago: '1' });
   };
 
   return (
@@ -110,15 +112,16 @@ const LotesManager = ({ data, setData }) => {
                   <span style={{ padding: '0.25rem 0.75rem', background: '#dbeafe', color: '#1e40af', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{lote.codigo}</span>
                   <span style={{ color: '#6b7280' }}>{lote.proveedor}</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Fecha</p><p style={{ fontWeight: '600' }}>{new Date(lote.fecha).toLocaleDateString()}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Unitario</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Forma de Pago</p><p style={{ fontWeight: '600' }}>{lote.mesesPago === 1 ? 'Pago único' : `${lote.mesesPago} meses`}</p></div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button onClick={() => { setEditingLote(lote); setFormData({ proveedor: lote.proveedor, fecha: lote.fecha, cantidad: lote.cantidad.toString(), costeTotal: lote.costeTotal.toString(), prendasDefectuosas: lote.prendasDefectuosas.toString() }); setShowModal(true); }} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button>
+                <button onClick={() => { setEditingLote(lote); setFormData({ proveedor: lote.proveedor, fecha: lote.fecha, cantidad: lote.cantidad.toString(), costeTotal: lote.costeTotal.toString(), prendasDefectuosas: lote.prendasDefectuosas.toString(), formaPago: lote.mesesPago === 1 ? 'unico' : 'plazos', mesesPago: lote.mesesPago?.toString() || '1' }); setShowModal(true); }} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button>
                 <button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, lotes: data.lotes.filter(l => l.id !== lote.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button>
               </div>
             </div>
@@ -138,6 +141,10 @@ const LotesManager = ({ data, setData }) => {
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Cantidad</label><input type="number" value={formData.cantidad} onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Total</label><input type="number" step="0.01" value={formData.costeTotal} onChange={(e) => setFormData({ ...formData, costeTotal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Defectuosas</label><input type="number" value={formData.prendasDefectuosas} onChange={(e) => setFormData({ ...formData, prendasDefectuosas: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Forma de Pago</label><select value={formData.formaPago} onChange={(e) => { setFormData({ ...formData, formaPago: e.target.value, mesesPago: e.target.value === 'unico' ? '1' : formData.mesesPago }); }} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="unico">Pago único</option><option value="plazos">A plazos</option></select></div>
+              {formData.formaPago === 'plazos' && (
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Número de Meses</label><select value={formData.mesesPago} onChange={(e) => setFormData({ ...formData, mesesPago: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="2">2 meses</option><option value="3">3 meses</option><option value="4">4 meses</option><option value="5">5 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
               <button onClick={() => { setShowModal(false); setEditingLote(null); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button>
@@ -304,6 +311,77 @@ function App() {
     
     // Calcular ventas confirmadas
     const totalVentasConfirmadas = prendasConfirmadas.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+    
+    // Calcular ventas pendientes
+    const totalVentasPendientes = prendasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+    
+    // Total ventas (confirmadas + pendientes)
+    const totalVentas = totalVentasConfirmadas + totalVentasPendientes;
+    
+    // Gastos manuales
+    const totalGastosManuales = gastosMes.reduce((sum, g) => sum + g.cantidad, 0);
+    
+    // Gastos automáticos: envío (solo confirmadas) + lavado
+    const gastosEnvio = prendasConfirmadas.length * data.config.costeEnvio;
+    const gastosLavado = [...prendasConfirmadas, ...prendasPendientes]
+      .filter(p => p.lavada)
+      .length * data.config.costeLavado;
+    
+    // Gastos de lotes distribuidos según forma de pago
+    const gastosLotes = data.lotes.reduce((sum, lote) => {
+      if (!lote.fecha) return sum;
+      
+      const fechaLote = new Date(lote.fecha);
+      const [yearMes, monthMes] = month.split('-');
+      const fechaMes = new Date(parseInt(yearMes), parseInt(monthMes) - 1, 1);
+      
+      const mesesPago = lote.mesesPago || 1;
+      const cuotaMensual = lote.costeTotal / mesesPago;
+      
+      // Verificar si este mes está dentro del periodo de pago
+      for (let i = 0; i < mesesPago; i++) {
+        const fechaPago = new Date(fechaLote);
+        fechaPago.setMonth(fechaPago.getMonth() + i);
+        
+        if (fechaPago.getFullYear() === fechaMes.getFullYear() && 
+            fechaPago.getMonth() === fechaMes.getMonth()) {
+          return sum + cuotaMensual;
+        }
+      }
+      return sum;
+    }, 0);
+    
+    const totalGastosAutomaticos = gastosEnvio + gastosLavado + gastosLotes;
+    const totalGastos = totalGastosManuales + totalGastosAutomaticos;
+    
+    const totalIngresos = ingresosMes.reduce((sum, i) => sum + i.cantidad, 0);
+    const beneficioNeto = totalVentas + totalIngresos - totalGastos;
+    
+    const prendasVendidas = prendasConfirmadas.length + prendasPendientes.length;
+    const ticketMedio = prendasVendidas > 0 ? totalVentas / prendasVendidas : 0;
+    
+    const costeCompraTotal = [...prendasConfirmadas, ...prendasPendientes]
+      .reduce((sum, p) => sum + (p.precioCompra || 0), 0);
+    const margenBruto = totalVentas > 0 ? ((totalVentas - costeCompraTotal) / totalVentas * 100) : 0;
+    
+    return { 
+      totalVentas, 
+      totalVentasConfirmadas,
+      totalVentasPendientes,
+      totalGastos, 
+      totalGastosManuales,
+      gastosEnvio,
+      gastosLavado,
+      gastosLotes,
+      totalIngresos, 
+      beneficioNeto, 
+      prendasVendidas,
+      prendasConfirmadas: prendasConfirmadas.length,
+      prendasPendientes: prendasPendientes.length,
+      ticketMedio, 
+      margenBruto 
+    };
+  }; 0), 0);
     
     // Calcular ventas pendientes
     const totalVentasPendientes = prendasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
@@ -487,6 +565,7 @@ function App() {
                   <p style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{currentMetrics.totalGastos.toFixed(2)} €</p>
                   <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' }}>
                     <div>Manuales: {currentMetrics.totalGastosManuales.toFixed(2)} €</div>
+                    <div>Lotes: {currentMetrics.gastosLotes.toFixed(2)} €</div>
                     <div>Envío: {currentMetrics.gastosEnvio.toFixed(2)} €</div>
                     <div>Lavado: {currentMetrics.gastosLavado.toFixed(2)} €</div>
                   </div>
@@ -540,34 +619,63 @@ function App() {
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>📦 Existencias</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
                 {(() => {
-                  const prendasMes = data.prendas.filter(p => {
-                    const fechaCreacion = p.id ? new Date(parseInt(p.id)).toISOString().slice(0, 7) : null;
-                    return fechaCreacion === selectedMonth;
-                  });
-                  const prendasVendidasMes = data.prendas.filter(p => {
-                    const fechaVenta = p.fechaVentaConfirmada || p.fechaVentaPendiente;
-                    return fechaVenta && fechaVenta.startsWith(selectedMonth);
-                  });
-                  const prendasCompradas = prendasMes.length;
-                  const prendasVendidas = prendasVendidasMes.length;
-                  const stockInicio = data.prendas.filter(p => {
-                    const fechaCreacion = p.id ? new Date(parseInt(p.id)).toISOString().slice(0, 7) : null;
-                    return fechaCreacion && fechaCreacion < selectedMonth && (p.estado !== 'vendida-confirmada' || (p.fechaVentaConfirmada && p.fechaVentaConfirmada.slice(0, 7) >= selectedMonth));
+                  // Prendas compradas en el mes actual (desde lotes del mes)
+                  const lotesMesActual = data.lotes.filter(l => l.fecha && l.fecha.startsWith(selectedMonth));
+                  const prendasCompradas = lotesMesActual.reduce((sum, l) => sum + l.cantidad, 0);
+                  
+                  // Calcular mes anterior
+                  const [year, month] = selectedMonth.split('-');
+                  const mesAnteriorDate = new Date(parseInt(year), parseInt(month) - 2, 1);
+                  const mesAnterior = mesAnteriorDate.toISOString().slice(0, 7);
+                  
+                  // Prendas del mes anterior que NO se vendieron
+                  const lotesMesAnterior = data.lotes.filter(l => l.fecha && l.fecha.startsWith(mesAnterior));
+                  const prendasCompradasMesAnterior = lotesMesAnterior.reduce((sum, l) => sum + l.cantidad, 0);
+                  const prendasVendidasMesAnterior = data.prendas.filter(p => {
+                    const fechaVenta = p.fechaVentaConfirmada;
+                    return fechaVenta && fechaVenta.startsWith(mesAnterior);
                   }).length;
-                  const ratioRotacion = prendasCompradas > 0 ? prendasVendidas / (prendasCompradas + stockInicio) : 0;
-                  const tiempoPromedio = prendasVendidasMes.length > 0 ? prendasVendidasMes.reduce((sum, p) => {
-                    if (p.fechaSubida && p.fechaVentaConfirmada) {
-                      const dias = Math.floor((new Date(p.fechaVentaConfirmada) - new Date(p.fechaSubida)) / (1000 * 60 * 60 * 24));
-                      return sum + dias;
-                    }
-                    return sum;
-                  }, 0) / prendasVendidasMes.filter(p => p.fechaSubida && p.fechaVentaConfirmada).length : 0;
+                  const prendasPeriodoAnterior = prendasCompradasMesAnterior - prendasVendidasMesAnterior;
+                  
+                  // Prendas totales de todos los periodos anteriores (stock acumulado no vendido)
+                  const todosLotesAnteriores = data.lotes.filter(l => l.fecha && l.fecha < selectedMonth);
+                  const totalCompradasAnteriores = todosLotesAnteriores.reduce((sum, l) => sum + l.cantidad, 0);
+                  const totalVendidasAnteriores = data.prendas.filter(p => {
+                    const fechaVenta = p.fechaVentaConfirmada;
+                    return fechaVenta && fechaVenta < selectedMonth;
+                  }).length;
+                  const prendasTotalesPeriodosAnteriores = totalCompradasAnteriores - totalVendidasAnteriores;
+                  
+                  // Prendas vendidas en el mes actual
+                  const prendasVendidasMes = data.prendas.filter(p => {
+                    const fechaVenta = p.fechaVentaConfirmada;
+                    return fechaVenta && fechaVenta.startsWith(selectedMonth);
+                  }).length;
+                  
+                  // Ratio de rotación = Vendidas / (Compradas mes + Quedadas mes anterior)
+                  const ratioRotacion = (prendasCompradas + prendasPeriodoAnterior) > 0 
+                    ? prendasVendidasMes / (prendasCompradas + prendasPeriodoAnterior) 
+                    : 0;
+                  
+                  // Tiempo promedio en Vinted
+                  const prendasVendidasConFechas = data.prendas.filter(p => {
+                    const fechaVenta = p.fechaVentaConfirmada;
+                    return fechaVenta && fechaVenta.startsWith(selectedMonth) && p.fechaSubida;
+                  });
+                  
+                  const tiempoPromedio = prendasVendidasConFechas.length > 0 
+                    ? prendasVendidasConFechas.reduce((sum, p) => {
+                        const dias = Math.floor((new Date(p.fechaVentaConfirmada) - new Date(p.fechaSubida)) / (1000 * 60 * 60 * 24));
+                        return sum + dias;
+                      }, 0) / prendasVendidasConFechas.length 
+                    : 0;
 
                   return (
                     <>
-                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Prendas compradas</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{prendasCompradas}</div></div>
-                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Del periodo anterior</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{stockInicio}</div></div>
-                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Prendas vendidas</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{prendasVendidas}</div></div>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Prendas compradas</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{prendasCompradas}</div><div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '0.25rem' }}>De {lotesMesActual.length} lote(s)</div></div>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Del periodo anterior</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{prendasPeriodoAnterior}</div><div style={{ fontSize: '0.65rem', color: '#9ca3af', marginTop: '0.25rem' }}>No vendidas en {mesAnterior}</div></div>
+                      <div style={{ background: '#eff6ff', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#1e40af', marginBottom: '0.25rem' }}>Total periodos anteriores</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e40af' }}>{prendasTotalesPeriodosAnteriores}</div><div style={{ fontSize: '0.65rem', color: '#3b82f6', marginTop: '0.25rem' }}>Stock acumulado</div></div>
+                      <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Prendas vendidas</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>{prendasVendidasMes}</div></div>
                       <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Ratio de rotación</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{ratioRotacion.toFixed(2)}</div></div>
                       <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Tiempo promedio Vinted</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>{Math.round(tiempoPromedio)} días</div></div>
                     </>
@@ -665,6 +773,10 @@ function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
                     <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Gastos manuales</span>
                     <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.totalGastosManuales.toFixed(2)} €</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Lotes (cuotas del mes)</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.gastosLotes.toFixed(2)} €</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
                     <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Envío</span>
