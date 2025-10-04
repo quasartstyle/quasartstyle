@@ -408,8 +408,10 @@ const InventarioManager = ({ data, setData }) => {
     destacada: false,
     resubida: false,
     costeDestacado: '',
+    fechaGastoDestacado: '',
     destacadaDespuesResubida: false,
-    costeDestacadoDespuesResubida: ''
+    costeDestacadoDespuesResubida: '',
+    fechaGastoDestacadoDespuesResubida: ''
   });
 
   const resetForm = () => {
@@ -426,8 +428,10 @@ const InventarioManager = ({ data, setData }) => {
       destacada: false,
       resubida: false,
       costeDestacado: '',
+      fechaGastoDestacado: '',
       destacadaDespuesResubida: false,
-      costeDestacadoDespuesResubida: ''
+      costeDestacadoDespuesResubida: '',
+      fechaGastoDestacadoDespuesResubida: ''
     });
     setEditingPrenda(null);
   };
@@ -447,8 +451,10 @@ const InventarioManager = ({ data, setData }) => {
       destacada: prenda.destacada || false,
       resubida: prenda.resubida || false,
       costeDestacado: (prenda.costeDestacado || '').toString(),
+      fechaGastoDestacado: prenda.fechaGastoDestacado || '',
       destacadaDespuesResubida: prenda.destacadaDespuesResubida || false,
-      costeDestacadoDespuesResubida: (prenda.costeDestacadoDespuesResubida || '').toString()
+      costeDestacadoDespuesResubida: (prenda.costeDestacadoDespuesResubida || '').toString(),
+      fechaGastoDestacadoDespuesResubida: prenda.fechaGastoDestacadoDespuesResubida || ''
     });
     setShowModal(true);
   };
@@ -499,8 +505,10 @@ const InventarioManager = ({ data, setData }) => {
       destacada: formData.destacada,
       resubida: formData.resubida,
       costeDestacado: formData.destacada && !formData.resubida ? parseFloat(formData.costeDestacado) || 0 : 0,
+      fechaGastoDestacado: formData.destacada && !formData.resubida ? formData.fechaGastoDestacado : null,
       destacadaDespuesResubida: formData.destacadaDespuesResubida || false,
-      costeDestacadoDespuesResubida: formData.destacadaDespuesResubida ? parseFloat(formData.costeDestacadoDespuesResubida) || 0 : 0
+      costeDestacadoDespuesResubida: formData.destacadaDespuesResubida ? parseFloat(formData.costeDestacadoDespuesResubida) || 0 : 0,
+      fechaGastoDestacadoDespuesResubida: formData.destacadaDespuesResubida ? formData.fechaGastoDestacadoDespuesResubida : null
     };
     
     if (editingPrenda) {
@@ -611,8 +619,15 @@ const InventarioManager = ({ data, setData }) => {
                       step="0.01" 
                       value={formData.costeDestacado} 
                       onChange={(e) => setFormData({ ...formData, costeDestacado: e.target.value })} 
-                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem' }} 
+                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem', marginBottom: '0.5rem' }} 
                       placeholder="1.95" 
+                    />
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem', color: '#f59e0b' }}>Fecha del gasto de destacar</label>
+                    <input 
+                      type="date" 
+                      value={formData.fechaGastoDestacado || ''} 
+                      onChange={(e) => setFormData({ ...formData, fechaGastoDestacado: e.target.value })} 
+                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem' }} 
                     />
                   </div>
                 )}
@@ -647,19 +662,26 @@ const InventarioManager = ({ data, setData }) => {
                       </label>
                     </div>
                     
-                    {formData.destacadaDespuesResubida && (
-                      <div>
-                        <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem', color: '#f59e0b' }}>Coste de destacar después de resubir (€)</label>
-                        <input 
-                          type="number" 
-                          step="0.01" 
-                          value={formData.costeDestacadoDespuesResubida || ''} 
-                          onChange={(e) => setFormData({ ...formData, costeDestacadoDespuesResubida: e.target.value })} 
-                          style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem' }} 
-                          placeholder="1.95" 
-                        />
-                      </div>
-                    )}
+                  {formData.destacadaDespuesResubida && (
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem', color: '#f59e0b' }}>Coste de destacar después de resubir (€)</label>
+                      <input 
+                        type="number" 
+                        step="0.01" 
+                        value={formData.costeDestacadoDespuesResubida || ''} 
+                        onChange={(e) => setFormData({ ...formData, costeDestacadoDespuesResubida: e.target.value })} 
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem', marginBottom: '0.5rem' }} 
+                        placeholder="1.95" 
+                      />
+                      <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem', color: '#f59e0b' }}>Fecha del gasto de destacar post-resubida</label>
+                      <input 
+                        type="date" 
+                        value={formData.fechaGastoDestacadoDespuesResubida || ''} 
+                        onChange={(e) => setFormData({ ...formData, fechaGastoDestacadoDespuesResubida: e.target.value })} 
+                        style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem' }} 
+                      />
+                    </div>
+                  )}
                   </div>
                 )}
                 
@@ -985,16 +1007,15 @@ function App() {
   const gastosLavado = [...prendasConfirmadas, ...prendasPendientes].filter(p => p.lavada).length * data.config.costeLavado;
   
 // NUEVO: Gastos de destacados del mes (incluye destacados normales y después de resubir)
-const gastosDestacados = data.prendas
-  .filter(p => p.fechaSubida && p.fechaSubida.startsWith(month))
-  .reduce((sum, p) => {
+// Gastos de destacados del mes (usa la fecha del gasto, no la fecha de subida)
+  const gastosDestacados = data.prendas.reduce((sum, p) => {
     let total = 0;
-    // Destacado normal (solo si no está resubida)
-    if (p.destacada && !p.resubida && p.costeDestacado) {
+    // Destacado normal
+    if (p.destacada && !p.resubida && p.costeDestacado && p.fechaGastoDestacado && p.fechaGastoDestacado.startsWith(month)) {
       total += parseFloat(p.costeDestacado);
     }
     // Destacado después de resubir
-    if (p.destacadaDespuesResubida && p.costeDestacadoDespuesResubida) {
+    if (p.destacadaDespuesResubida && p.costeDestacadoDespuesResubida && p.fechaGastoDestacadoDespuesResubida && p.fechaGastoDestacadoDespuesResubida.startsWith(month)) {
       total += parseFloat(p.costeDestacadoDespuesResubida);
     }
     return sum + total;
@@ -1049,9 +1070,23 @@ const gastosDestacados = data.prendas
   const thisMonth = new Date().toISOString().slice(0, 7);
   const isCurrentMonth = selectedMonth === thisMonth;
   const alerts = [];
-  const stockActual = data.prendas.filter(p => p.estado === 'comprada' || p.estado === 'subida').length;
-  if (stockActual < data.config.alertaStock) alerts.push({ tipo: 'stock', mensaje: `Stock bajo: ${stockActual} prendas` });
-  if (currentMetrics.margenBruto < data.config.alertaMargen) alerts.push({ tipo: 'margen', mensaje: `Margen bajo: ${currentMetrics.margenBruto.toFixed(1)}%` });
+  // Calcular stock correctamente: todas las prendas compradas históricamente menos las vendidas
+  const todosLotesHistoricos = data.lotes;
+  const totalCompradasHistoricas = todosLotesHistoricos.reduce((sum, l) => sum + l.cantidad, 0);
+  
+  // Total de prendas vendidas confirmadas de todos los tiempos
+  const totalVendidasHistoricas = data.prendas.filter(p => p.fechaVentaConfirmada).length;
+  
+  // Stock actual real = compradas - vendidas - inútiles
+  const totalInutiles = todosLotesHistoricos.reduce((sum, l) => sum + (l.prendasInutiles || 0), 0);
+  const stockActual = totalCompradasHistoricas - totalVendidasHistoricas - totalInutiles;
+  
+  if (stockActual < data.config.alertaStock) {
+    alerts.push({ tipo: 'stock', mensaje: `Stock bajo: ${stockActual} prendas` });
+  }
+  if (currentMetrics.margenBruto < data.config.alertaMargen) {
+    alerts.push({ tipo: 'margen', mensaje: `Margen bajo: ${currentMetrics.margenBruto.toFixed(1)}%` });
+  }
 
   if (!isAuthenticated) {
     return (
