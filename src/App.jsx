@@ -1188,8 +1188,8 @@ function App() {
       <div style={{ minHeight: '100vh', background: 'linear-gradient(to bottom right, #0f172a, #1e293b, #0f172a)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
         <div style={{ background: 'white', borderRadius: '1rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', padding: '2rem', width: '100%', maxWidth: '28rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div style={{ width: '6rem', height: '6rem', margin: '0 auto 1rem', background: '#2563eb', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Package size={48} style={{ color: 'white' }} />
+            <div style={{ width: '6rem', height: '6rem', margin: '0 auto 1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/logo.png" alt="Quasart Style" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
             <h1 style={{ fontSize: '1.875rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1f2937' }}>Quasart Style</h1>
             <p style={{ color: '#6b7280' }}>Panel de Control Vinted</p>
@@ -1219,8 +1219,8 @@ function App() {
         <div style={{ maxWidth: '80rem', margin: '0 auto', padding: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ width: '2.5rem', height: '2.5rem', background: '#2563eb', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Package size={24} style={{ color: 'white' }} />
+              <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img src="/logo.png" alt="Quasart Style" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               </div>
               <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937' }}>Quasart Style</h1>
             </div>
@@ -1332,7 +1332,12 @@ function App() {
             <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>Stock actual</h2>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-                <div style={{ textAlign: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>{data.prendas.filter(p => p.estado === 'comprada').length}</div><div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Compradas</div></div>
+                <div style={{ textAlign: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+                  <div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>
+                    {data.lotes.reduce((sum, l) => sum + l.cantidad, 0)}
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginTop: '0.25rem' }}>Compradas (total histórico)</div>
+                </div>
                 <div style={{ textAlign: 'center', padding: '1rem', background: '#eff6ff', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1e3a8a' }}>{data.prendas.filter(p => p.estado === 'subida').length}</div><div style={{ fontSize: '0.875rem', color: '#2563eb', marginTop: '0.25rem' }}>En Vinted</div></div>
                 <div style={{ textAlign: 'center', padding: '1rem', background: '#fef3c7', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#78350f' }}>{data.prendas.filter(p => p.estado === 'vendida-pendiente').length}</div><div style={{ fontSize: '0.875rem', color: '#f59e0b', marginTop: '0.25rem' }}>Pendientes</div></div>
                 <div style={{ textAlign: 'center', padding: '1rem', background: '#d1fae5', borderRadius: '0.5rem' }}><div style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#065f46' }}>{data.prendas.filter(p => p.estado === 'vendida-confirmada').length}</div><div style={{ fontSize: '0.875rem', color: '#10b981', marginTop: '0.25rem' }}>Vendidas</div></div>
