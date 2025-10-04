@@ -1936,7 +1936,75 @@ function App() {
                         </div>
                       </div>
                     )}
-            
+                    {/* Balance Financiero del Mes Actual */}
+                    <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>Balance del Mes</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#10b981' }}>Ingresos</span>
+                            <span style={{ fontSize: '1rem', fontWeight: '700', color: '#10b981' }}>{currentMetrics.totalVentas.toFixed(2)}€</span>
+                          </div>
+                          <div style={{ width: '100%', height: '40px', background: '#e5e7eb', borderRadius: '0.5rem', overflow: 'hidden', position: 'relative' }}>
+                            <div style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              background: 'linear-gradient(to right, #10b981, #059669)', 
+                              borderRadius: '0.5rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}>
+                              Ingresos
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem', fontWeight: '600', color: '#ef4444' }}>Gastos</span>
+                            <span style={{ fontSize: '1rem', fontWeight: '700', color: '#ef4444' }}>{currentMetrics.totalGastos.toFixed(2)}€</span>
+                          </div>
+                          <div style={{ width: '100%', height: '40px', background: '#e5e7eb', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                            <div style={{ 
+                              width: currentMetrics.totalVentas > 0 ? `${Math.min((currentMetrics.totalGastos / currentMetrics.totalVentas) * 100, 100)}%` : '0%', 
+                              height: '100%', 
+                              background: 'linear-gradient(to right, #ef4444, #dc2626)', 
+                              borderRadius: '0.5rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              paddingLeft: '1rem',
+                              color: 'white',
+                              fontWeight: 'bold'
+                            }}>
+                              Gastos
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ 
+                          padding: '1.5rem', 
+                          background: currentMetrics.beneficioNeto >= 0 ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' : 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', 
+                          borderRadius: '0.75rem',
+                          textAlign: 'center',
+                          border: `3px solid ${currentMetrics.beneficioNeto >= 0 ? '#10b981' : '#ef4444'}`
+                        }}>
+                          <div style={{ fontSize: '0.875rem', color: currentMetrics.beneficioNeto >= 0 ? '#065f46' : '#991b1b', marginBottom: '0.5rem', fontWeight: '600' }}>
+                            {currentMetrics.beneficioNeto >= 0 ? '✓ Beneficio Neto' : '✗ Pérdida Neta'}
+                          </div>
+                          <div style={{ 
+                            fontSize: '2.5rem', 
+                            fontWeight: 'bold', 
+                            color: currentMetrics.beneficioNeto >= 0 ? '#10b981' : '#ef4444' 
+                          }}>
+                            {currentMetrics.beneficioNeto >= 0 ? '+' : ''}{currentMetrics.beneficioNeto.toFixed(2)}€
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: currentMetrics.beneficioNeto >= 0 ? '#065f46' : '#991b1b', marginTop: '0.5rem' }}>
+                            Margen: {currentMetrics.margenBruto.toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>                    
                     {/* Ratio Ingresos vs Gastos */}
                     <div style={{ background: '#f9fafb', borderRadius: '0.5rem', padding: '1.5rem' }}>
                       <h4 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#1f2937' }}>Balance Financiero</h4>
@@ -1985,6 +2053,214 @@ function App() {
                     </div>
             
                   </div>
+                );
+              })()}
+            </div>
+            {/* HISTÓRICO */}
+            <div style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>📈 Histórico Total</h3>
+              
+              {(() => {
+                const todasVentasConfirmadas = data.prendas.filter(p => p.fechaVentaConfirmada);
+                const todasVentasPendientes = data.prendas.filter(p => p.fechaVentaPendiente && !p.fechaVentaConfirmada);
+                
+                const totalVentasConfirmadas = todasVentasConfirmadas.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+                const totalVentasPendientes = todasVentasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+                const totalVentasHistorico = totalVentasConfirmadas + totalVentasPendientes;
+                
+                const cantidadVentasConfirmadas = todasVentasConfirmadas.length;
+                const cantidadVentasPendientes = todasVentasPendientes.length;
+                const cantidadTotalVendidas = cantidadVentasConfirmadas + cantidadVentasPendientes;
+                
+                const todosGastosManuales = data.gastos.reduce((sum, g) => sum + g.cantidad, 0);
+                const todosGastosEnvio = todasVentasConfirmadas.length * data.config.costeEnvio;
+                const todosGastosLavado = [...todasVentasConfirmadas, ...todasVentasPendientes].filter(p => p.lavada).length * data.config.costeLavado;
+                
+                const todosGastosDestacados = data.prendas.reduce((sum, p) => {
+                  let total = 0;
+                  if (p.destacada && !p.resubida && p.costeDestacado) total += parseFloat(p.costeDestacado);
+                  if (p.destacadaDespuesResubida && p.costeDestacadoDespuesResubida) total += parseFloat(p.costeDestacadoDespuesResubida);
+                  return sum + total;
+                }, 0);
+                
+                const todosGastosLotes = data.lotes.reduce((sum, l) => sum + l.costeTotal, 0);
+                
+                const totalGastosHistorico = todosGastosManuales + todosGastosEnvio + todosGastosLavado + todosGastosDestacados + todosGastosLotes;
+                
+                const beneficioConfirmado = totalVentasConfirmadas - totalGastosHistorico;
+                const beneficioConPendientes = totalVentasHistorico - totalGastosHistorico;
+                
+                return (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                      
+                      <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', borderRadius: '0.75rem', padding: '1.5rem', color: 'white' }}>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.5rem' }}>💰 Total Vendido</div>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{totalVentasConfirmadas.toFixed(2)}€</div>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>{cantidadVentasConfirmadas} prendas confirmadas</div>
+                        {totalVentasPendientes > 0 && (
+                          <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }}>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.9, marginBottom: '0.25rem' }}>+ Pendientes de confirmar:</div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>+{totalVentasPendientes.toFixed(2)}€</div>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>{cantidadVentasPendientes} prendas</div>
+                          </div>
+                        )}
+                      </div>
+            
+                      <div style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', borderRadius: '0.75rem', padding: '1.5rem', color: 'white' }}>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.5rem' }}>💸 Total Gastado</div>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{totalGastosHistorico.toFixed(2)}€</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.75rem', opacity: 0.9, marginTop: '1rem' }}>
+                          <div>Lotes: {todosGastosLotes.toFixed(2)}€</div>
+                          <div>Envíos: {todosGastosEnvio.toFixed(2)}€</div>
+                          <div>Lavado: {todosGastosLavado.toFixed(2)}€</div>
+                          <div>Destacados: {todosGastosDestacados.toFixed(2)}€</div>
+                          <div>Otros: {todosGastosManuales.toFixed(2)}€</div>
+                        </div>
+                      </div>
+            
+                      <div style={{ 
+                        background: beneficioConfirmado >= 0 
+                          ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' 
+                          : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', 
+                        borderRadius: '0.75rem', 
+                        padding: '1.5rem', 
+                        color: 'white' 
+                      }}>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.5rem' }}>
+                          {beneficioConfirmado >= 0 ? '📊 Beneficio Neto' : '⚠️ Pérdida Neta'}
+                        </div>
+                        <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                          {beneficioConfirmado >= 0 ? '+' : ''}{beneficioConfirmado.toFixed(2)}€
+                        </div>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>Solo ventas confirmadas</div>
+                        {totalVentasPendientes > 0 && (
+                          <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }}>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.9, marginBottom: '0.25rem' }}>Si se confirman pendientes:</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                              {beneficioConPendientes >= 0 ? '+' : ''}{beneficioConPendientes.toFixed(2)}€
+                            </div>
+                          </div>
+                        )}
+                      </div>
+            
+                      <div style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', borderRadius: '0.75rem', padding: '1.5rem', color: 'white' }}>
+                        <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.5rem' }}>📦 Resumen de Actividad</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem' }}>Lotes comprados</span>
+                            <span style={{ fontWeight: 'bold' }}>{data.lotes.length}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem' }}>Prendas compradas</span>
+                            <span style={{ fontWeight: 'bold' }}>{data.lotes.reduce((sum, l) => sum + l.cantidad, 0)}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem' }}>Prendas vendidas</span>
+                            <span style={{ fontWeight: 'bold' }}>{cantidadTotalVendidas}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', background: 'rgba(255,255,255,0.15)', borderRadius: '0.5rem' }}>
+                            <span style={{ fontSize: '0.875rem' }}>Ticket medio</span>
+                            <span style={{ fontWeight: 'bold' }}>
+                              {cantidadTotalVendidas > 0 ? (totalVentasHistorico / cantidadTotalVendidas).toFixed(2) : '0.00'}€
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+            
+                    </div>
+            
+                    <div style={{ background: '#f9fafb', borderRadius: '0.75rem', padding: '1.5rem' }}>
+                      <h4 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '1.5rem', color: '#1f2937' }}>📈 Evolución Últimos 12 Meses</h4>
+                      {(() => {
+                        const mesesData = [];
+                        const hoy = new Date();
+                        for (let i = 11; i >= 0; i--) {
+                          const fecha = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+                          const mesStr = fecha.toISOString().slice(0, 7);
+                          const nombreMes = fecha.toLocaleDateString('es-ES', { month: 'short' }).toUpperCase();
+                          
+                          const metricas = calculateMonthMetrics(mesStr);
+                          mesesData.push({
+                            mes: nombreMes,
+                            ingresos: metricas.totalVentas,
+                            gastos: metricas.totalGastos,
+                            pendiente: metricas.totalVentasPendientes
+                          });
+                        }
+                        
+                        const maxValor = Math.max(...mesesData.flatMap(m => [m.ingresos, m.gastos, m.pendiente]));
+                        const escala = maxValor > 0 ? 250 / maxValor : 1;
+                        
+                        return (
+                          <>
+                            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', height: '280px', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
+                              {mesesData.map((mes, idx) => (
+                                <div key={idx} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                                  <div style={{ display: 'flex', gap: '3px', alignItems: 'flex-end', height: '250px' }}>
+                                    {mes.ingresos > 0 && (
+                                      <div 
+                                        style={{ 
+                                          width: '24px', 
+                                          height: `${mes.ingresos * escala}px`, 
+                                          background: '#10b981', 
+                                          borderRadius: '4px 4px 0 0',
+                                          transition: 'height 0.3s',
+                                          cursor: 'pointer'
+                                        }}
+                                        title={`Ingresos: ${mes.ingresos.toFixed(2)}€`}
+                                      />
+                                    )}
+                                    {mes.gastos > 0 && (
+                                      <div 
+                                        style={{ 
+                                          width: '24px', 
+                                          height: `${mes.gastos * escala}px`, 
+                                          background: '#ef4444', 
+                                          borderRadius: '4px 4px 0 0',
+                                          transition: 'height 0.3s',
+                                          cursor: 'pointer'
+                                        }}
+                                        title={`Gastos: ${mes.gastos.toFixed(2)}€`}
+                                      />
+                                    )}
+                                    {mes.pendiente > 0 && (
+                                      <div 
+                                        style={{ 
+                                          width: '24px', 
+                                          height: `${mes.pendiente * escala}px`, 
+                                          background: '#3b82f6', 
+                                          borderRadius: '4px 4px 0 0',
+                                          transition: 'height 0.3s',
+                                          cursor: 'pointer'
+                                        }}
+                                        title={`Pendiente: ${mes.pendiente.toFixed(2)}€`}
+                                      />
+                                    )}
+                                  </div>
+                                  <span style={{ fontSize: '0.75rem', color: '#6b7280', fontWeight: '600', textTransform: 'uppercase' }}>{mes.mes}</span>
+                                </div>
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '2.5rem', marginTop: '1rem', padding: '1rem', background: 'white', borderRadius: '0.5rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '24px', height: '14px', background: '#10b981', borderRadius: '3px' }}></div>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Ingresos</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '24px', height: '14px', background: '#ef4444', borderRadius: '3px' }}></div>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Gastos</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '24px', height: '14px', background: '#3b82f6', borderRadius: '3px' }}></div>
+                                <span style={{ fontSize: '0.875rem', color: '#6b7280', fontWeight: '500' }}>Pendiente</span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </>
                 );
               })()}
             </div>            
