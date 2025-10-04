@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Package, TrendingUp, Settings, LogOut, Calendar, Plus, Edit2, Trash2, X, Search, AlertCircle, PieChart, CheckCircle, Clock } from 'lucide-react';
+import { BarChart3, Package, TrendingUp, Settings, LogOut, Calendar, Plus, Edit2, Trash2, X, Search, AlertCircle, PieChart, CheckCircle, Clock, Star, RefreshCw } from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
@@ -395,16 +395,55 @@ const InventarioManager = ({ data, setData }) => {
   const [editingPrenda, setEditingPrenda] = useState(null);
   const [filtro, setFiltro] = useState('todos');
   const [busqueda, setBusqueda] = useState('');
-  const [formData, setFormData] = useState({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '', lavada: false });
+  const [formData, setFormData] = useState({ 
+    loteId: '', 
+    tipo: '', 
+    talla: '', 
+    precioObjetivo: '', 
+    precioVentaReal: '', 
+    fechaSubida: '', 
+    fechaVentaPendiente: '', 
+    fechaVentaConfirmada: '', 
+    lavada: false,
+    destacada: false,
+    resubida: false,
+    costeDestacado: ''
+  });
 
   const resetForm = () => {
-    setFormData({ loteId: '', tipo: '', talla: '', precioObjetivo: '', precioVentaReal: '', fechaSubida: '', fechaVentaPendiente: '', fechaVentaConfirmada: '', lavada: false });
+    setFormData({ 
+      loteId: '', 
+      tipo: '', 
+      talla: '', 
+      precioObjetivo: '', 
+      precioVentaReal: '', 
+      fechaSubida: '', 
+      fechaVentaPendiente: '', 
+      fechaVentaConfirmada: '', 
+      lavada: false,
+      destacada: false,
+      resubida: false,
+      costeDestacado: ''
+    });
     setEditingPrenda(null);
   };
 
   const handleEdit = (prenda) => {
     setEditingPrenda(prenda);
-    setFormData({ loteId: prenda.loteId, tipo: prenda.tipo, talla: prenda.talla, precioObjetivo: prenda.precioObjetivo.toString(), precioVentaReal: prenda.precioVentaReal.toString(), fechaSubida: prenda.fechaSubida || '', fechaVentaPendiente: prenda.fechaVentaPendiente || '', fechaVentaConfirmada: prenda.fechaVentaConfirmada || '', lavada: prenda.lavada || false });
+    setFormData({ 
+      loteId: prenda.loteId, 
+      tipo: prenda.tipo, 
+      talla: prenda.talla, 
+      precioObjetivo: prenda.precioObjetivo.toString(), 
+      precioVentaReal: prenda.precioVentaReal.toString(), 
+      fechaSubida: prenda.fechaSubida || '', 
+      fechaVentaPendiente: prenda.fechaVentaPendiente || '', 
+      fechaVentaConfirmada: prenda.fechaVentaConfirmada || '', 
+      lavada: prenda.lavada || false,
+      destacada: prenda.destacada || false,
+      resubida: prenda.resubida || false,
+      costeDestacado: (prenda.costeDestacado || '').toString()
+    });
     setShowModal(true);
   };
 
@@ -413,12 +452,21 @@ const InventarioManager = ({ data, setData }) => {
       alert('Completa campos obligatorios');
       return;
     }
+    
+    // Validar que si está destacada, tenga coste
+    if (formData.destacada && !formData.costeDestacado) {
+      alert('Debes indicar el coste de destacar esta prenda');
+      return;
+    }
+    
     const lote = data.lotes.find(l => l.id === formData.loteId);
     if (!lote) return;
+    
     let estado = 'comprada';
     if (formData.fechaVentaConfirmada) estado = 'vendida-confirmada';
     else if (formData.fechaVentaPendiente) estado = 'vendida-pendiente';
     else if (formData.fechaSubida) estado = 'subida';
+    
     const prendaData = {
       id: editingPrenda?.id || Date.now().toString(), 
       loteId: formData.loteId, 
@@ -436,8 +484,12 @@ const InventarioManager = ({ data, setData }) => {
       fechaVentaPendiente: formData.fechaVentaPendiente || null,
       fechaVentaConfirmada: formData.fechaVentaConfirmada || null, 
       estado,
-      lavada: formData.lavada
+      lavada: formData.lavada,
+      destacada: formData.resubida ? false : formData.destacada, // Si está resubida, no puede estar destacada
+      resubida: formData.resubida,
+      costeDestacado: (formData.destacada && !formData.resubida) ? parseFloat(formData.costeDestacado) || 0 : 0
     };
+    
     if (editingPrenda) {
       setData({ ...data, prendas: data.prendas.map(p => p.id === editingPrenda.id ? prendaData : p) });
     } else {
@@ -465,38 +517,132 @@ const InventarioManager = ({ data, setData }) => {
           <select value={filtro} onChange={(e) => setFiltro(e.target.value)} style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="todos">Todos</option><option value="comprada">Compradas</option><option value="subida">En Vinted</option><option value="vendida-pendiente">Pendientes</option><option value="vendida-confirmada">Vendidas</option></select>
         </div>
       </div>
-      {prendas.length === 0 ? (<div style={{ background: 'white', borderRadius: '0.5rem', padding: '3rem', textAlign: 'center' }}><Package size={48} style={{ margin: '0 auto 1rem', color: '#9ca3af' }} /><p style={{ color: '#6b7280' }}>No hay prendas</p></div>) : (prendas.map(p => (<div key={p.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><div style={{ flex: 1 }}><div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}><span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span><span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: p.estado === 'comprada' ? '#f3f4f6' : p.estado === 'subida' ? '#dbeafe' : p.estado === 'vendida-pendiente' ? '#fef3c7' : '#d1fae5', color: p.estado === 'comprada' ? '#1f2937' : p.estado === 'subida' ? '#1e40af' : p.estado === 'vendida-pendiente' ? '#92400e' : '#065f46' }}>{p.estado}</span>{p.lavada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af' }}>Lavada</span>}</div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}><div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div><div><p style={{ color: '#6b7280' }}>Tipo</p><p style={{ fontWeight: '600' }}>{p.tipo}</p></div><div><p style={{ color: '#6b7280' }}>Talla</p><p style={{ fontWeight: '600' }}>{p.talla}</p></div><div><p style={{ color: '#6b7280' }}>Compra</p><p style={{ fontWeight: '600' }}>{p.precioCompra.toFixed(2)} €</p></div><div><p style={{ color: '#6b7280' }}>Venta</p><p style={{ fontWeight: '600', color: '#10b981' }}>{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div></div></div><div style={{ display: 'flex', gap: '0.5rem' }}><button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button><button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button></div></div></div>)))}
-      {showModal && (<div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}><div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '48rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}><h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingPrenda ? `Editar Prenda (${editingPrenda.sku})` : 'Nueva Prenda'}</h3><button onClick={() => { setShowModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button></div><div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Lote</label><select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value, tipo: '' })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={editingPrenda}><option value="">Selecciona</option>{data.lotes.map(l => <option key={l.id} value={l.id}>{l.codigo}</option>)}</select></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Tipo</label><select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={!formData.loteId}><option value="">Selecciona</option>{formData.loteId && data.lotes.find(l => l.id === formData.loteId)?.tiposPrendas?.map(t => <option key={t} value={t}>{t}</option>)}</select></div></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Talla</label><input type="text" value={formData.talla} onChange={(e) => setFormData({ ...formData, talla: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="M, L, 42..." /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Objetivo</label><input type="number" step="0.01" value={formData.precioObjetivo} onChange={(e) => setFormData({ ...formData, precioObjetivo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="20.00" /></div></div><div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem' }}><input type="checkbox" id="lavada" checked={formData.lavada} onChange={(e) => setFormData({ ...formData, lavada: e.target.checked })} style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} /><label htmlFor="lavada" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>¿Prenda lavada? (se añadirá coste de {data.config.costeLavado}€)</label></div><div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}><h4 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Estado de la prenda</h4><div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Subida</label><input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Venta Pendiente</label><input type="date" value={formData.fechaVentaPendiente} onChange={(e) => setFormData({ ...formData, fechaVentaPendiente: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Venta Real</label><input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="18.50" /></div><div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Confirmada</label><input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div></div></div></div></div><div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}><button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button><button onClick={handleSubmit} style={{ flex: 1, padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>{editingPrenda ? 'Guardar' : 'Crear'}</button></div></div></div>)}
-    </div>
-  );
-};
-
-const ConfigManager = ({ data, setData }) => {
-  const [tab, setTab] = useState('costes');
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Configuración</h2>
-      <div style={{ background: 'white', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-        <div style={{ borderBottom: '1px solid #e5e7eb', display: 'flex', padding: '0 1.5rem' }}>
-          <button onClick={() => setTab('costes')} style={{ padding: '1rem', borderBottom: tab === 'costes' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: '500', color: tab === 'costes' ? '#2563eb' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Costes</button>
-          <button onClick={() => setTab('alertas')} style={{ padding: '1rem', borderBottom: tab === 'alertas' ? '2px solid #2563eb' : '2px solid transparent', fontWeight: '500', color: tab === 'alertas' ? '#2563eb' : '#6b7280', background: 'none', border: 'none', cursor: 'pointer' }}>Alertas</button>
+      {prendas.length === 0 ? (
+        <div style={{ background: 'white', borderRadius: '0.5rem', padding: '3rem', textAlign: 'center' }}>
+          <Package size={48} style={{ margin: '0 auto 1rem', color: '#9ca3af' }} />
+          <p style={{ color: '#6b7280' }}>No hay prendas</p>
         </div>
-        <div style={{ padding: '1.5rem' }}>
-          {tab === 'costes' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '32rem' }}>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Envío</label><input type="number" step="0.01" value={data.config.costeEnvio} onChange={(e) => setData({ ...data, config: { ...data.config, costeEnvio: parseFloat(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Lavado</label><input type="number" step="0.01" value={data.config.costeLavado} onChange={(e) => setData({ ...data, config: { ...data.config, costeLavado: parseFloat(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+      ) : (
+        prendas.map(p => (
+          <div key={p.id} style={{ background: 'white', borderRadius: '0.5rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+                  <span style={{ padding: '0.25rem 0.75rem', background: '#f3e8ff', color: '#6b21a8', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: '600' }}>{p.sku}</span>
+                  <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: p.estado === 'comprada' ? '#f3f4f6' : p.estado === 'subida' ? '#dbeafe' : p.estado === 'vendida-pendiente' ? '#fef3c7' : '#d1fae5', color: p.estado === 'comprada' ? '#1f2937' : p.estado === 'subida' ? '#1e40af' : p.estado === 'vendida-pendiente' ? '#92400e' : '#065f46' }}>{p.estado}</span>
+                  {p.lavada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#dbeafe', color: '#1e40af' }}>Lavada</span>}
+                  {p.destacada && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#fef3c7', color: '#92400e', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Star size={12} />Destacada</span>}
+                  {p.resubida && <span style={{ padding: '0.125rem 0.5rem', borderRadius: '1rem', fontSize: '0.75rem', background: '#e0e7ff', color: '#3730a3', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><RefreshCw size={12} />Resubida</span>}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', fontSize: '0.875rem' }}>
+                  <div><p style={{ color: '#6b7280' }}>Lote</p><p style={{ fontWeight: '600' }}>{p.loteCodigo}</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Tipo</p><p style={{ fontWeight: '600' }}>{p.tipo}</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Talla</p><p style={{ fontWeight: '600' }}>{p.talla}</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Compra</p><p style={{ fontWeight: '600' }}>{p.precioCompra.toFixed(2)} €</p></div>
+                  <div><p style={{ color: '#6b7280' }}>Venta</p><p style={{ fontWeight: '600', color: '#10b981' }}>{p.precioVentaReal > 0 ? `${p.precioVentaReal.toFixed(2)} €` : '-'}</p></div>
+                  {p.destacada && p.costeDestacado > 0 && <div><p style={{ color: '#6b7280' }}>Coste Destacado</p><p style={{ fontWeight: '600', color: '#f59e0b' }}>{p.costeDestacado.toFixed(2)} €</p></div>}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button onClick={() => handleEdit(p)} style={{ padding: '0.5rem', color: '#2563eb', background: 'transparent', border: 'none', cursor: 'pointer' }}><Edit2 size={18} /></button>
+                <button onClick={() => { if (window.confirm('Eliminar?')) setData({ ...data, prendas: data.prendas.filter(pr => pr.id !== p.id) }); }} style={{ padding: '0.5rem', color: '#dc2626', background: 'transparent', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button>
+              </div>
             </div>
-          )}
-          {tab === 'alertas' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '32rem' }}>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Días sin vender</label><input type="number" value={data.config.alertaDias} onChange={(e) => setData({ ...data, config: { ...data.config, alertaDias: parseInt(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Stock mínimo</label><input type="number" value={data.config.alertaStock} onChange={(e) => setData({ ...data, config: { ...data.config, alertaStock: parseInt(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Margen mínimo %</label><input type="number" value={data.config.alertaMargen} onChange={(e) => setData({ ...data, config: { ...data.config, alertaMargen: parseInt(e.target.value) } })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+          </div>
+        ))
+      )}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}>
+          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '48rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingPrenda ? `Editar Prenda (${editingPrenda.sku})` : 'Nueva Prenda'}</h3>
+              <button onClick={() => { setShowModal(false); resetForm(); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={24} /></button>
             </div>
-          )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Lote</label><select value={formData.loteId} onChange={(e) => setFormData({ ...formData, loteId: e.target.value, tipo: '' })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={editingPrenda}><option value="">Selecciona</option>{data.lotes.map(l => <option key={l.id} value={l.id}>{l.codigo}</option>)}</select></div>
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Tipo</label><select value={formData.tipo} onChange={(e) => setFormData({ ...formData, tipo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} disabled={!formData.loteId}><option value="">Selecciona</option>{formData.loteId && data.lotes.find(l => l.id === formData.loteId)?.tiposPrendas?.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Talla</label><input type="text" value={formData.talla} onChange={(e) => setFormData({ ...formData, talla: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="M, L, 42..." /></div>
+                <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Objetivo</label><input type="number" step="0.01" value={formData.precioObjetivo} onChange={(e) => setFormData({ ...formData, precioObjetivo: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="20.00" /></div>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="checkbox" id="lavada" checked={formData.lavada} onChange={(e) => setFormData({ ...formData, lavada: e.target.checked })} style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} />
+                  <label htmlFor="lavada" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer' }}>¿Prenda lavada? (se añadirá coste de {data.config.costeLavado}€)</label>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input 
+                    type="checkbox" 
+                    id="resubida" 
+                    checked={formData.resubida} 
+                    onChange={(e) => setFormData({ ...formData, resubida: e.target.checked, destacada: e.target.checked ? false : formData.destacada })} 
+                    style={{ width: '1.25rem', height: '1.25rem', cursor: 'pointer' }} 
+                  />
+                  <label htmlFor="resubida" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <RefreshCw size={16} />
+                    ¿Prenda resubida?
+                  </label>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: formData.resubida ? 0.5 : 1 }}>
+                  <input 
+                    type="checkbox" 
+                    id="destacada" 
+                    checked={formData.destacada} 
+                    onChange={(e) => setFormData({ ...formData, destacada: e.target.checked })} 
+                    disabled={formData.resubida}
+                    style={{ width: '1.25rem', height: '1.25rem', cursor: formData.resubida ? 'not-allowed' : 'pointer' }} 
+                  />
+                  <label htmlFor="destacada" style={{ fontSize: '0.875rem', fontWeight: '500', cursor: formData.resubida ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <Star size={16} />
+                    ¿Prenda destacada?
+                  </label>
+                </div>
+                
+                {formData.destacada && !formData.resubida && (
+                  <div style={{ marginLeft: '2rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem', color: '#f59e0b' }}>Coste de destacar (€)</label>
+                    <input 
+                      type="number" 
+                      step="0.01" 
+                      value={formData.costeDestacado} 
+                      onChange={(e) => setFormData({ ...formData, costeDestacado: e.target.value })} 
+                      style={{ width: '100%', padding: '0.5rem 0.75rem', border: '2px solid #f59e0b', borderRadius: '0.5rem' }} 
+                      placeholder="1.95" 
+                    />
+                  </div>
+                )}
+                
+                {formData.resubida && (
+                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginLeft: '2rem', fontStyle: 'italic' }}>
+                    * Las prendas resubidas no pueden estar destacadas
+                  </div>
+                )}
+              </div>
+              
+              <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '1rem' }}>
+                <h4 style={{ fontWeight: '600', marginBottom: '0.75rem' }}>Estado de la prenda</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Subida</label><input type="date" value={formData.fechaSubida} onChange={(e) => setFormData({ ...formData, fechaSubida: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+                  <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Venta Pendiente</label><input type="date" value={formData.fechaVentaPendiente} onChange={(e) => setFormData({ ...formData, fechaVentaPendiente: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Precio Venta Real</label><input type="number" step="0.01" value={formData.precioVentaReal} onChange={(e) => setFormData({ ...formData, precioVentaReal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} placeholder="18.50" /></div>
+                    <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha Confirmada</label><input type="date" value={formData.fechaVentaConfirmada} onChange={(e) => setFormData({ ...formData, fechaVentaConfirmada: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+              <button onClick={() => { setShowModal(false); resetForm(); }} style={{ flex: 1, padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', background: 'white', cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleSubmit} style={{ flex: 1, padding: '0.5rem 1rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '0.5rem', cursor: 'pointer' }}>{editingPrenda ? 'Guardar' : 'Crear'}</button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -518,41 +664,68 @@ function App() {
   };
 
   const calculateMonthMetrics = (month) => {
-    const prendasConfirmadas = data.prendas.filter(p => p.fechaVentaConfirmada && p.fechaVentaConfirmada.startsWith(month));
-    const prendasPendientes = data.prendas.filter(p => p.fechaVentaPendiente && p.fechaVentaPendiente.startsWith(month) && !p.fechaVentaConfirmada);
-    const gastosMes = data.gastos.filter(g => g.fecha && g.fecha.startsWith(month));
-    const ingresosMes = data.ingresos.filter(i => i.fecha && i.fecha.startsWith(month));
-    const totalVentasConfirmadas = prendasConfirmadas.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
-    const totalVentasPendientes = prendasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
-    const totalVentas = totalVentasConfirmadas + totalVentasPendientes;
-    const totalGastosManuales = gastosMes.reduce((sum, g) => sum + g.cantidad, 0);
-    const gastosEnvio = prendasConfirmadas.length * data.config.costeEnvio;
-    const gastosLavado = [...prendasConfirmadas, ...prendasPendientes].filter(p => p.lavada).length * data.config.costeLavado;
-    const gastosLotes = data.lotes.reduce((sum, lote) => {
-      if (!lote.fecha) return sum;
-      const fechaLote = new Date(lote.fecha);
-      const [yearMes, monthMes] = month.split('-');
-      const fechaMes = new Date(parseInt(yearMes), parseInt(monthMes) - 1, 1);
-      const mesesPago = lote.mesesPago || 1;
-      const cuotaMensual = lote.costeTotal / mesesPago;
-      for (let i = 0; i < mesesPago; i++) {
-        const fechaPago = new Date(fechaLote);
-        fechaPago.setMonth(fechaPago.getMonth() + i);
-        if (fechaPago.getFullYear() === fechaMes.getFullYear() && fechaPago.getMonth() === fechaMes.getMonth()) {
-          return sum + cuotaMensual;
-        }
+  const prendasConfirmadas = data.prendas.filter(p => p.fechaVentaConfirmada && p.fechaVentaConfirmada.startsWith(month));
+  const prendasPendientes = data.prendas.filter(p => p.fechaVentaPendiente && p.fechaVentaPendiente.startsWith(month) && !p.fechaVentaConfirmada);
+  const gastosMes = data.gastos.filter(g => g.fecha && g.fecha.startsWith(month));
+  const ingresosMes = data.ingresos.filter(i => i.fecha && i.fecha.startsWith(month));
+  
+  const totalVentasConfirmadas = prendasConfirmadas.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+  const totalVentasPendientes = prendasPendientes.reduce((sum, p) => sum + (p.precioVentaReal || 0), 0);
+  const totalVentas = totalVentasConfirmadas + totalVentasPendientes;
+  
+  const totalGastosManuales = gastosMes.reduce((sum, g) => sum + g.cantidad, 0);
+  const gastosEnvio = prendasConfirmadas.length * data.config.costeEnvio;
+  const gastosLavado = [...prendasConfirmadas, ...prendasPendientes].filter(p => p.lavada).length * data.config.costeLavado;
+  
+  // NUEVO: Gastos de destacados del mes
+  const gastosDestacados = data.prendas
+    .filter(p => p.destacada && p.costeDestacado && p.fechaSubida && p.fechaSubida.startsWith(month))
+    .reduce((sum, p) => sum + (p.costeDestacado || 0), 0);
+  
+  const gastosLotes = data.lotes.reduce((sum, lote) => {
+    if (!lote.fecha) return sum;
+    const fechaLote = new Date(lote.fecha);
+    const [yearMes, monthMes] = month.split('-');
+    const fechaMes = new Date(parseInt(yearMes), parseInt(monthMes) - 1, 1);
+    const mesesPago = lote.mesesPago || 1;
+    const cuotaMensual = lote.costeTotal / mesesPago;
+    for (let i = 0; i < mesesPago; i++) {
+      const fechaPago = new Date(fechaLote);
+      fechaPago.setMonth(fechaPago.getMonth() + i);
+      if (fechaPago.getFullYear() === fechaMes.getFullYear() && fechaPago.getMonth() === fechaMes.getMonth()) {
+        return sum + cuotaMensual;
       }
-      return sum;
-    }, 0);
-    const totalGastos = totalGastosManuales + gastosEnvio + gastosLavado + gastosLotes;
-    const totalIngresos = ingresosMes.reduce((sum, i) => sum + i.cantidad, 0);
-    const beneficioNeto = totalVentas + totalIngresos - totalGastos;
-    const prendasVendidas = prendasConfirmadas.length + prendasPendientes.length;
-    const ticketMedio = prendasVendidas > 0 ? totalVentas / prendasVendidas : 0;
-    const costeCompraTotal = [...prendasConfirmadas, ...prendasPendientes].reduce((sum, p) => sum + (p.precioCompra || 0), 0);
-    const margenBruto = totalVentas > 0 ? ((totalVentas - costeCompraTotal) / totalVentas * 100) : 0;
-    return { totalVentas, totalVentasConfirmadas, totalVentasPendientes, totalGastos, totalGastosManuales, gastosEnvio, gastosLavado, gastosLotes, totalIngresos, beneficioNeto, prendasVendidas, prendasConfirmadas: prendasConfirmadas.length, prendasPendientes: prendasPendientes.length, ticketMedio, margenBruto };
+    }
+    return sum;
+  }, 0);
+  
+  const totalGastos = totalGastosManuales + gastosEnvio + gastosLavado + gastosDestacados + gastosLotes;
+  const totalIngresos = ingresosMes.reduce((sum, i) => sum + i.cantidad, 0);
+  const beneficioNeto = totalVentas + totalIngresos - totalGastos;
+  const prendasVendidas = prendasConfirmadas.length + prendasPendientes.length;
+  const ticketMedio = prendasVendidas > 0 ? totalVentas / prendasVendidas : 0;
+  const costeCompraTotal = [...prendasConfirmadas, ...prendasPendientes].reduce((sum, p) => sum + (p.precioCompra || 0), 0);
+  const margenBruto = totalVentas > 0 ? ((totalVentas - costeCompraTotal) / totalVentas * 100) : 0;
+  
+  return { 
+    totalVentas, 
+    totalVentasConfirmadas, 
+    totalVentasPendientes, 
+    totalGastos, 
+    totalGastosManuales, 
+    gastosEnvio, 
+    gastosLavado, 
+    gastosDestacados,  // NUEVO
+    gastosLotes, 
+    totalIngresos, 
+    beneficioNeto, 
+    prendasVendidas, 
+    prendasConfirmadas: prendasConfirmadas.length, 
+    prendasPendientes: prendasPendientes.length, 
+    ticketMedio, 
+    margenBruto 
   };
+};
 
   const currentMetrics = calculateMonthMetrics(selectedMonth);
   const thisMonth = new Date().toISOString().slice(0, 7);
@@ -686,6 +859,7 @@ function App() {
                     <div>Lotes: {currentMetrics.gastosLotes.toFixed(2)} €</div>
                     <div>Envío: {currentMetrics.gastosEnvio.toFixed(2)} €</div>
                     <div>Lavado: {currentMetrics.gastosLavado.toFixed(2)} €</div>
+                    <div>Destacados: {currentMetrics.gastosDestacados.toFixed(2)} €</div>
                   </div>
                 </div>
               </div>
@@ -874,8 +1048,8 @@ function App() {
                     <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.gastosEnvio.toFixed(2)} €</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#f9fafb', borderRadius: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Lavado</span>
-                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.gastosLavado.toFixed(2)} €</span>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Destacados</span>
+                    <span style={{ fontWeight: '600', color: '#1f2937' }}>{currentMetrics.gastosDestacados.toFixed(2)} €</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: '#fee2e2', borderRadius: '0.5rem', marginTop: '0.5rem' }}>
                     <span style={{ fontWeight: '600', color: '#991b1b' }}>Total Gastos</span>
