@@ -60,7 +60,7 @@ const LotesManager = ({ data, setData }) => {
     fecha: new Date().toISOString().slice(0, 10), 
     cantidad: '', 
     costeTotal: '', 
-    prendasDefectuosas: '0', 
+    prendasInutiles: '0',
     formaPago: 'unico', 
     mesesPago: '1' 
   });
@@ -86,7 +86,7 @@ const LotesManager = ({ data, setData }) => {
       cantidad: parseInt(formData.cantidad), 
       costeTotal: parseFloat(formData.costeTotal),
       costeUnitario, 
-      prendasDefectuosas: parseInt(formData.prendasDefectuosas),
+      prendasInutiles: parseInt(formData.prendasInutiles),
       formaPago: formData.formaPago,
       mesesPago: parseInt(formData.mesesPago)
     };
@@ -97,7 +97,7 @@ const LotesManager = ({ data, setData }) => {
     }
     setShowModal(false);
     setEditingLote(null);
-    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasDefectuosas: '0', formaPago: 'unico', mesesPago: '1' });
+    setFormData({ proveedor: '', fecha: new Date().toISOString().slice(0, 10), cantidad: '', costeTotal: '', prendasInutiles: '0', formaPago: 'unico', mesesPago: '1' });
   };
 
   return (
@@ -128,6 +128,7 @@ const LotesManager = ({ data, setData }) => {
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Prendas</p><p style={{ fontWeight: '600' }}>{lote.cantidad}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Total</p><p style={{ fontWeight: '600' }}>{lote.costeTotal.toFixed(2)} €</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Coste Unitario</p><p style={{ fontWeight: '600' }}>{lote.costeUnitario.toFixed(2)} €</p></div>
+                  <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Inútiles (desechables)</p><p style={{ fontWeight: '600' }}>{lote.prendasInutiles || 0}</p></div>
                   <div><p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Forma de Pago</p><p style={{ fontWeight: '600' }}>{lote.mesesPago === 1 ? 'Pago único' : `${lote.mesesPago} meses`}</p></div>
                 </div>
               </div>
@@ -139,7 +140,7 @@ const LotesManager = ({ data, setData }) => {
                     fecha: lote.fecha, 
                     cantidad: lote.cantidad.toString(), 
                     costeTotal: lote.costeTotal.toString(), 
-                    prendasDefectuosas: lote.prendasDefectuosas.toString(), 
+                    prendasInutiles: (lote.prendasInutiles || 0).toString(),
                     formaPago: lote.mesesPago === 1 ? 'unico' : 'plazos', 
                     mesesPago: lote.mesesPago?.toString() || '1' 
                   }); 
@@ -159,7 +160,7 @@ const LotesManager = ({ data, setData }) => {
       )}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', zIndex: 50 }}>
-          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '28rem', width: '100%', padding: '1.5rem' }}>
+          <div style={{ background: 'white', borderRadius: '0.5rem', maxWidth: '28rem', width: '100%', padding: '1.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{editingLote ? 'Editar' : 'Nuevo'} Lote</h3>
               <button onClick={() => { setShowModal(false); setEditingLote(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -171,7 +172,7 @@ const LotesManager = ({ data, setData }) => {
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Fecha</label><input type="date" value={formData.fecha} onChange={(e) => setFormData({ ...formData, fecha: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Cantidad</label><input type="number" value={formData.cantidad} onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Coste Total</label><input type="number" step="0.01" value={formData.costeTotal} onChange={(e) => setFormData({ ...formData, costeTotal: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
-              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Defectuosas</label><input type="number" value={formData.prendasDefectuosas} onChange={(e) => setFormData({ ...formData, prendasDefectuosas: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+              <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Prendas Inútiles (desechables)</label><input type="number" value={formData.prendasInutiles} onChange={(e) => setFormData({ ...formData, prendasInutiles: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
               <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Forma de Pago</label><select value={formData.formaPago} onChange={(e) => { setFormData({ ...formData, formaPago: e.target.value, mesesPago: e.target.value === 'unico' ? '1' : formData.mesesPago }); }} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="unico">Pago único</option><option value="plazos">A plazos</option></select></div>
               {formData.formaPago === 'plazos' && (
                 <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.25rem' }}>Número de Meses</label><select value={formData.mesesPago} onChange={(e) => setFormData({ ...formData, mesesPago: e.target.value })} style={{ width: '100%', padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }}><option value="2">2 meses</option><option value="3">3 meses</option><option value="4">4 meses</option><option value="5">5 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select></div>
@@ -222,7 +223,10 @@ const InventarioManager = ({ data, setData }) => {
       id: editingPrenda?.id || Date.now().toString(), 
       loteId: formData.loteId, 
       loteCodigo: lote.codigo,
-      sku: editingPrenda?.sku || `QS-${Date.now().toString().slice(-8)}`, 
+      sku: editingPrenda?.sku || (() => {
+        const skuNumero = data.prendas.length + 1;
+        return `QS-${skuNumero.toString().padStart(4, '0')}`;
+      })(),
       tipo: formData.tipo, 
       talla: formData.talla,
       precioCompra: lote.costeUnitario, 
@@ -566,21 +570,19 @@ function App() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                 {(() => {
                   const lotesMes = data.lotes.filter(l => l.fecha && l.fecha.startsWith(selectedMonth));
-                  const prendasDefectuosas = lotesMes.reduce((sum, l) => sum + (l.prendasDefectuosas || 0), 0);
-                  const totalPrendas = lotesMes.reduce((sum, l) => sum + l.cantidad, 0);
-                  const porcDefectuosas = totalPrendas > 0 ? (prendasDefectuosas / totalPrendas * 100) : 0;
+                  const prendasInutiles = lotesMes.reduce((sum, l) => sum + (l.prendasInutiles || 0), 0);
                   
-                  const prendasLavadas = data.prendas.filter(p => {
-                    const fechaCreacion = p.id ? new Date(parseInt(p.id)).toISOString().slice(0, 7) : null;
-                    return fechaCreacion === selectedMonth && p.lavada;
-                  }).length;
-                  const porcATratar = totalPrendas > 0 ? (prendasLavadas / totalPrendas * 100) : 0;
-                  
-                  // Prendas inútiles: defectuosas que nunca se vendieron
-                  const prendasInutiles = data.prendas.filter(p => {
+                  // Prendas a tratar: prendas del mes que están marcadas como lavadas
+                  const prendasMesCreadas = data.prendas.filter(p => {
                     const lote = data.lotes.find(l => l.id === p.loteId);
-                    return lote && lote.fecha && lote.fecha.startsWith(selectedMonth) && !p.fechaVentaConfirmada && !p.fechaVentaPendiente && !p.fechaSubida;
-                  }).length;
+                    return lote && lote.fecha && lote.fecha.startsWith(selectedMonth);
+                  });
+                  const prendasATratar = prendasMesCreadas.filter(p => p.lavada).length;
+                  
+                  const totalPrendas = lotesMes.reduce((sum, l) => sum + l.cantidad, 0);
+                  const prendasDefectuosas = prendasATratar + prendasInutiles;
+                  const porcDefectuosas = totalPrendas > 0 ? (prendasDefectuosas / totalPrendas * 100) : 0;
+                  const porcATratar = totalPrendas > 0 ? (prendasATratar / totalPrendas * 100) : 0;
                   const porcInutiles = totalPrendas > 0 ? (prendasInutiles / totalPrendas * 100) : 0;
                   
                   const prendasVendidasMes = data.prendas.filter(p => {
@@ -593,7 +595,7 @@ function App() {
                   return (
                     <>
                       <div style={{ background: '#fef3c7', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#78350f', marginBottom: '0.25rem' }}>Prendas defectuosas</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#92400e' }}>{porcDefectuosas.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#92400e', marginTop: '0.25rem' }}>{prendasDefectuosas} de {totalPrendas}</div></div>
-                      <div style={{ background: '#dbeafe', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#1e40af', marginBottom: '0.25rem' }}>Prendas a tratar (lavadas)</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e40af' }}>{porcATratar.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#1e40af', marginTop: '0.25rem' }}>{prendasLavadas} de {totalPrendas}</div></div>
+                      <div style={{ background: '#dbeafe', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#1e40af', marginBottom: '0.25rem' }}>Prendas a tratar</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e40af' }}>{porcATratar.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#1e40af', marginTop: '0.25rem' }}>{prendasATratar} de {totalPrendas}</div></div>
                       <div style={{ background: '#fee2e2', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#991b1b', marginBottom: '0.25rem' }}>Prendas inútiles (desechables)</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#dc2626' }}>{porcInutiles.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#991b1b', marginTop: '0.25rem' }}>{prendasInutiles} de {totalPrendas}</div></div>
                       <div style={{ background: '#d1fae5', borderRadius: '0.5rem', padding: '1rem' }}><div style={{ fontSize: '0.75rem', color: '#065f46', marginBottom: '0.25rem' }}>Ventas al precio objetivo</div><div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#065f46' }}>{porcObjetivo.toFixed(1)} %</div><div style={{ fontSize: '0.75rem', color: '#065f46', marginTop: '0.25rem' }}>{vendidasAlObjetivo} de {prendasVendidasMes.length}</div></div>
                     </>
